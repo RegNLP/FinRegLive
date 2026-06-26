@@ -216,6 +216,7 @@ Completed:
 - Phase 11B: pytest coverage for chunking, deduplication, and API behavior
 - Phase 11C: document and recent update API endpoints
 - Phase 11D: Streamlit UI polish with recent updates and document inspection
+- Phase 12: Docker Compose setup for OpenSearch, backend, and frontend
 
 Current working flow:
 
@@ -242,6 +243,7 @@ SEC RSS / FCA HTML
   -> automated tests
   -> document browsing endpoints
   -> recent updates UI
+  -> Docker Compose local stack
 ```
 
 Not built yet:
@@ -755,7 +757,7 @@ Checkpoint:
 - A user can ask a question through the UI
 - Evidence is visible and inspectable
 
-### Phase 11: Docker and Local Deployment
+### Phase 12: Docker and Local Deployment
 
 - Add Dockerfiles
 - Add Docker Compose
@@ -781,7 +783,7 @@ Checkpoint:
 
 - One command starts the local application stack
 
-### Phase 12: Cloud-Ready Design
+### Phase 13: Cloud-Ready Design
 
 - Document AWS service mapping
 - Document secrets, logging, and scheduled ingestion strategy

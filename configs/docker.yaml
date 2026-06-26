@@ -1,0 +1,23 @@
+environment: docker
+
+database:
+  type: sqlite
+  sqlite_path: data/app.db
+
+search:
+  type: opensearch
+  host: http://opensearch:9200
+  index_name: finreg_chunks
+
+processing:
+  chunk_size_words: 120
+  chunk_overlap_words: 20
+
+embeddings:
+  provider: hash
+  model_name: deterministic-hash-embedding
+  dimension: 384
+
+llm:
+  provider: openai
+  model: gpt-4o-mini

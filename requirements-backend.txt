@@ -1,0 +1,9 @@
+fastapi
+beautifulsoup4
+feedparser
+openai
+opensearch-py
+PyYAML
+requests
+sqlmodel
+uvicorn[standard]

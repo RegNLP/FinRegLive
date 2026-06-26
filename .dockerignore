@@ -1,0 +1,8 @@
+.DS_Store
+.env
+.git/
+.pytest_cache/
+.venv/
+__pycache__/
+*.py[cod]
+data/

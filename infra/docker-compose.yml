@@ -13,5 +13,33 @@ services:
     volumes:
       - opensearch-data:/usr/share/opensearch/data
 
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/backend.Dockerfile
+    container_name: finreg-backend
+    environment:
+      FINREG_CONFIG_PATH: configs/docker.yaml
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend-data:/app/data
+    depends_on:
+      - opensearch
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: infra/frontend.Dockerfile
+    container_name: finreg-frontend
+    environment:
+      FINREG_API_BASE_URL: http://backend:8000
+    ports:
+      - "8502:8501"
+    depends_on:
+      - backend
+
 volumes:
   opensearch-data:
+  backend-data:

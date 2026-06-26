@@ -1336,6 +1336,125 @@ if updates:
 PY
 ```
 
+## Step 12: Dockerize Backend and Frontend
+
+Step 12 adds Docker support for the local application stack.
+
+Why this exists:
+
+- Docker makes the backend/frontend run the same way on another machine
+- Docker Compose starts OpenSearch, FastAPI, and Streamlit together
+- the backend container needs Docker-specific config because `localhost` inside a container is not your Mac
+
+Files added or updated:
+
+```text
+.dockerignore
+configs/docker.yaml
+infra/backend.Dockerfile
+infra/frontend.Dockerfile
+infra/docker-compose.yml
+README.md
+RUNBOOK.md
+```
+
+Build and start the full stack:
+
+```bash
+docker compose -f infra/docker-compose.yml up --build
+```
+
+Run in the background:
+
+```bash
+docker compose -f infra/docker-compose.yml up --build -d
+```
+
+Check running services:
+
+```bash
+docker compose -f infra/docker-compose.yml ps
+```
+
+Open services:
+
+```text
+Backend:  http://127.0.0.1:8000
+Frontend: http://127.0.0.1:8502
+OpenSearch: http://127.0.0.1:9200
+```
+
+Check backend:
+
+```bash
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/diagnostics
+```
+
+Stop services:
+
+```bash
+docker compose -f infra/docker-compose.yml down
+```
+
+Stop services and delete Docker volumes:
+
+```bash
+docker compose -f infra/docker-compose.yml down -v
+```
+
+Important notes:
+
+- `configs/local.yaml` is for running directly on your machine.
+- `configs/docker.yaml` is for containers.
+- The Docker backend uses `http://opensearch:9200` because `opensearch` is the Compose service name.
+- The Docker backend uses deterministic hash embeddings to keep the container lightweight.
+- The backend data volume is separate from your local `data/app.db`.
+- The Docker OpenSearch volume is separate from your existing local OpenSearch data.
+- After starting a fresh Docker stack, you may need to run ingestion, chunking, index creation, and indexing inside the backend container before query answers have evidence.
+
+Run a backend command inside Docker:
+
+```bash
+docker compose -f infra/docker-compose.yml exec backend python -m backend.indexing.manage_index
+```
+
+Prepare a small Docker demo dataset:
+
+```bash
+docker compose -f infra/docker-compose.yml exec backend python - <<'PY'
+from backend.ingestion.rss import fetch_rss
+from backend.ingestion.store import store_ingested_documents
+from backend.processing.build_chunks import build_chunks_for_stored_documents
+from backend.indexing.index_chunks import index_chunks
+
+documents = fetch_rss(
+    source_name="SEC",
+    source_url="https://www.sec.gov/news/pressreleases.rss",
+    limit=3,
+)
+
+store_result = store_ingested_documents(documents)
+chunk_result = build_chunks_for_stored_documents()
+index_result = index_chunks(recreate_index=True)
+
+print("documents_fetched:", len(documents))
+print("stored:", store_result.stored)
+print("duplicates:", store_result.duplicates)
+print("documents_processed:", chunk_result.documents_processed)
+print("chunks_created:", chunk_result.chunks_created)
+print("chunks_indexed:", index_result.chunks_indexed)
+PY
+```
+
+Test a Docker API query:
+
+```bash
+curl -X POST http://127.0.0.1:8000/query \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What did the SEC and CFTC publish about derivatives?","top_k":2,"use_llm":false}'
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
