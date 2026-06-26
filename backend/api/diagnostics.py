@@ -25,6 +25,7 @@ from backend.database.crud import (
     count_query_logs,
 )
 from backend.database.db import init_db
+from backend.ingestion.recent import SOURCES
 from backend.search.client import get_search_client, ping_search
 
 router = APIRouter(tags=["diagnostics"])
@@ -46,10 +47,18 @@ class SearchDiagnostics(BaseModel):
     indexed_chunk_count: int | None = None
 
 
+class SourceDiagnostics(BaseModel):
+    key: str
+    source_name: str
+    source_type: str
+    source_url: str
+
+
 class DiagnosticsResponse(BaseModel):
     environment: str
     database: DatabaseDiagnostics
     search: SearchDiagnostics
+    sources: list[SourceDiagnostics]
 
 
 def _search_diagnostics() -> SearchDiagnostics:
@@ -95,4 +104,13 @@ def diagnostics() -> DiagnosticsResponse:
             feedback_count=count_feedback(),
         ),
         search=_search_diagnostics(),
+        sources=[
+            SourceDiagnostics(
+                key=source.key,
+                source_name=source.source_name,
+                source_type=source.source_type,
+                source_url=source.source_url,
+            )
+            for source in SOURCES.values()
+        ],
     )

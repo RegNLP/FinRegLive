@@ -63,6 +63,23 @@ def show_api_status() -> None:
     else:
         st.sidebar.warning("Backend status unknown")
 
+    try:
+        diagnostics = api_get("/diagnostics")
+    except requests.RequestException:
+        return
+
+    database = diagnostics["database"]
+    sources = diagnostics.get("sources", [])
+
+    st.sidebar.subheader("Dataset")
+    metric_a, metric_b = st.sidebar.columns(2)
+    metric_a.metric("Documents", database["document_count"])
+    metric_b.metric("Chunks", database["chunk_count"])
+
+    with st.sidebar.expander("Sources", expanded=False):
+        for source in sources:
+            st.write(f"{source['source_name']} ({source['source_type']})")
+
 
 def render_sources(sources: list[dict[str, Any]]) -> None:
     if not sources:
@@ -259,6 +276,13 @@ def render_diagnostics_page() -> None:
     search_a.metric("Status", search["status"])
     search_b.metric("Index", "exists" if search["index_exists"] else "missing")
     search_c.metric("Indexed chunks", search["indexed_chunk_count"] or 0)
+
+    st.subheader("Configured Sources")
+    st.dataframe(
+        diagnostics.get("sources", []),
+        hide_index=True,
+        use_container_width=True,
+    )
 
     st.json(diagnostics)
 

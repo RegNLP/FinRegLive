@@ -56,7 +56,9 @@ def test_select_sources_all_includes_registered_sources() -> None:
         "sec_edgar",
         "fca_news",
         "fca_publications",
-        "gdelt_news",
+        "boe_news",
+        "boe_publications",
+        "boe_prudential",
     ]
 
 

@@ -217,12 +217,12 @@ Completed:
 - Phase 11C: document and recent update API endpoints
 - Phase 11D: Streamlit UI polish with recent updates and document inspection
 - Phase 12: Docker Compose setup for OpenSearch, backend, and frontend
-- Recent ingestion command for SEC, FCA, and GDELT sources
+- Recent ingestion command for SEC, FCA, and Bank of England sources
 
 Current working flow:
 
 ```text
-SEC RSS / SEC EDGAR / FCA HTML / GDELT news
+SEC RSS / SEC EDGAR / FCA HTML / Bank of England RSS
   -> recent ingestion command
   -> IngestedDocument
   -> content hash

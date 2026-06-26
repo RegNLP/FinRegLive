@@ -22,7 +22,6 @@ from email.utils import parsedate_to_datetime
 from pydantic import BaseModel
 
 from backend.indexing.index_chunks import IndexChunksResult, index_chunks
-from backend.ingestion.gdelt import fetch_gdelt_news
 from backend.ingestion.html import fetch_html
 from backend.ingestion.models import IngestedDocument
 from backend.ingestion.rss import fetch_rss
@@ -63,11 +62,23 @@ SOURCES = {
         source_url="https://www.fca.org.uk/publications",
         source_type="html",
     ),
-    "gdelt_news": SourceDefinition(
-        key="gdelt_news",
-        source_name="GDELT",
-        source_url="https://api.gdeltproject.org/api/v2/doc/doc",
-        source_type="gdelt",
+    "boe_news": SourceDefinition(
+        key="boe_news",
+        source_name="Bank of England News",
+        source_url="https://www.bankofengland.co.uk/rss/news",
+        source_type="rss",
+    ),
+    "boe_publications": SourceDefinition(
+        key="boe_publications",
+        source_name="Bank of England Publications",
+        source_url="https://www.bankofengland.co.uk/rss/publications",
+        source_type="rss",
+    ),
+    "boe_prudential": SourceDefinition(
+        key="boe_prudential",
+        source_name="Bank of England PRA",
+        source_url="https://www.bankofengland.co.uk/rss/prudential-regulation-publications",
+        source_type="rss",
     ),
 }
 
@@ -141,14 +152,6 @@ def fetch_recent_source(
     if source.source_type == "html":
         document = fetch_html(source_name=source.source_name, source_url=source.source_url)
         return [document], 1
-
-    if source.source_type == "gdelt":
-        documents = fetch_gdelt_news(
-            source_name=source.source_name,
-            days=days,
-            limit=limit,
-        )
-        return documents, 0
 
     raise ValueError(f"Unsupported source type: {source.source_type}")
 

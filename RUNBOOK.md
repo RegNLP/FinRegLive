@@ -1441,13 +1441,16 @@ sec_press        -> https://www.sec.gov/news/pressreleases.rss
 sec_edgar        -> https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&count=100&output=atom
 fca_news         -> https://www.fca.org.uk/news
 fca_publications -> https://www.fca.org.uk/publications
-gdelt_news       -> https://api.gdeltproject.org/api/v2/doc/doc
+boe_news         -> https://www.bankofengland.co.uk/rss/news
+boe_publications -> https://www.bankofengland.co.uk/rss/publications
+boe_prudential   -> https://www.bankofengland.co.uk/rss/prudential-regulation-publications
 ```
 
 Source notes:
 
 - SEC automated requests should include `FINREG_USER_AGENT` with contact information.
-- GDELT may return `429 Too Many Requests`; the ingestion command records that as a source failure and continues.
+- GDELT is not part of the active source set because the public API was unreliable during smoke testing.
+- Do not run multiple ingestion commands with `--recreate-index` at the same time.
 
 Ingest only SEC press releases:
 
@@ -1477,11 +1480,11 @@ docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
   python -m backend.ingestion.recent --days 7 --source fca_publications --recreate-index
 ```
 
-Ingest only GDELT news:
+Ingest only Bank of England PRA publications:
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
-  python -m backend.ingestion.recent --days 7 --source gdelt_news --limit 25 --recreate-index
+  python -m backend.ingestion.recent --days 7 --source boe_prudential --limit 50 --recreate-index
 ```
 
 Test a Docker API query:
