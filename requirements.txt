@@ -1,0 +1,7 @@
+fastapi
+beautifulsoup4
+feedparser
+PyYAML
+requests
+sqlmodel
+uvicorn[standard]

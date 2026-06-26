@@ -1,0 +1,18 @@
+environment: local
+
+database:
+  type: sqlite
+  sqlite_path: data/app.db
+
+search:
+  type: opensearch
+  host: http://localhost:9200
+  index_name: finreg_chunks
+
+processing:
+  chunk_size_words: 120
+  chunk_overlap_words: 20
+
+llm:
+  provider: openai
+  model: gpt-4o-mini

@@ -1,0 +1,60 @@
+# Step 03 - Database Models
+#
+# Role:
+#   Define the database tables used by the local application.
+#
+# Why this exists:
+#   The RAG system must remember ingested documents, document chunks, user
+#   queries, and feedback. These models describe the shape of that stored data.
+#
+# Input:
+#   Python values passed when creating Document, Chunk, QueryLog, or Feedback
+#   records.
+#
+# Output:
+#   SQLModel table definitions that can be created in SQLite.
+
+from datetime import datetime, timezone
+
+from sqlmodel import Field, SQLModel
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class Document(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    title: str
+    source_name: str
+    source_url: str
+    text: str = ""
+    content_hash: str = Field(index=True, unique=True)
+    publication_date: str | None = None
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class Chunk(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    document_id: int = Field(index=True)
+    chunk_index: int
+    text: str
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class QueryLog(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    query_text: str
+    retrieval_method: str
+    latency_ms: int | None = None
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class Feedback(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    query_id: int
+    useful_label: str
+    correctness_label: str
+    evidence_label: str
+    note: str | None = None
+    created_at: datetime = Field(default_factory=utc_now)
