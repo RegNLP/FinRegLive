@@ -203,6 +203,7 @@ Completed:
 - Phase 6C: OpenSearch index schema
 - Phase 6D: local embedding generation
 - Phase 6E: indexing chunks into OpenSearch
+- Phase 6F: manual BM25 and vector search checks
 
 Current working flow:
 
@@ -216,6 +217,7 @@ SEC RSS / FCA HTML
   -> SQLite Chunk rows
   -> local embeddings
   -> OpenSearch chunk index
+  -> BM25/vector search checks
 ```
 
 Not built yet:

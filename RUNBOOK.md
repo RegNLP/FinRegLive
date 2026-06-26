@@ -684,6 +684,25 @@ Run a simple BM25 search directly in OpenSearch:
 curl "http://localhost:9200/finreg_chunks/_search?q=derivatives&_source_excludes=embedding&size=2"
 ```
 
+### Step 6F: Manual BM25 and Vector Search Checks
+
+Run a Python search check:
+
+```bash
+python -m backend.indexing.search_checks "derivatives product definitions"
+```
+
+Expected result:
+
+```text
+BM25 results
+...
+Vector results
+...
+```
+
+Both sections should return indexed SEC chunks.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
