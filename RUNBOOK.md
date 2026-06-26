@@ -654,6 +654,36 @@ dimension: 384
 
 The first run may take longer because the embedding model is downloaded.
 
+### Step 6E: Index Chunks Into OpenSearch
+
+Make sure documents have been ingested and chunked first.
+
+Index stored chunks:
+
+```bash
+python -m backend.indexing.index_chunks
+```
+
+Expected result:
+
+```text
+chunks_seen: at least 1
+chunks_indexed: at least 1
+chunks_skipped: 0
+```
+
+Check OpenSearch document count:
+
+```bash
+curl http://localhost:9200/finreg_chunks/_count
+```
+
+Run a simple BM25 search directly in OpenSearch:
+
+```bash
+curl "http://localhost:9200/finreg_chunks/_search?q=derivatives&_source_excludes=embedding&size=2"
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

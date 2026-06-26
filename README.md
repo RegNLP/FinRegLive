@@ -202,6 +202,7 @@ Completed:
 - Phase 6B: OpenSearch Python client
 - Phase 6C: OpenSearch index schema
 - Phase 6D: local embedding generation
+- Phase 6E: indexing chunks into OpenSearch
 
 Current working flow:
 
@@ -213,15 +214,16 @@ SEC RSS / FCA HTML
   -> SQLite Document row
   -> word-based chunks
   -> SQLite Chunk rows
+  -> local embeddings
+  -> OpenSearch chunk index
 ```
 
 Not built yet:
 
-- OpenSearch indexing
 - retrieval
 - LLM answer generation
 - Streamlit frontend
-- Docker setup
+- full Docker setup for backend/frontend
 
 ### Phase 0: Project Understanding
 

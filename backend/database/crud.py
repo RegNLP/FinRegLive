@@ -85,6 +85,12 @@ def get_chunks_for_document(document_id: int) -> list[Chunk]:
         return list(session.exec(statement))
 
 
+def list_chunks() -> list[Chunk]:
+    with Session(engine) as session:
+        statement = select(Chunk).order_by(Chunk.document_id, Chunk.chunk_index)
+        return list(session.exec(statement))
+
+
 def create_chunk(document_id: int, chunk_index: int, text: str) -> Chunk:
     chunk = Chunk(document_id=document_id, chunk_index=chunk_index, text=text)
 
