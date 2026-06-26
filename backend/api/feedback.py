@@ -15,6 +15,8 @@
 # Output:
 #   Stored feedback metadata with a feedback ID.
 
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -26,10 +28,10 @@ router = APIRouter(tags=["feedback"])
 
 class FeedbackRequest(BaseModel):
     query_id: int = Field(gt=0)
-    useful_label: str = Field(min_length=1)
-    correctness_label: str = Field(min_length=1)
-    evidence_label: str = Field(min_length=1)
-    note: str | None = None
+    useful_label: Literal["useful", "not_useful", "unsure"]
+    correctness_label: Literal["correct", "incorrect", "unsure"]
+    evidence_label: Literal["supported", "weak", "missing", "unsure"]
+    note: str | None = Field(default=None, max_length=1000)
 
 
 class FeedbackResponse(BaseModel):

@@ -1093,6 +1093,81 @@ To point the frontend at a different backend URL:
 FINREG_API_BASE_URL=http://127.0.0.1:8000 .venv/bin/python -m streamlit run frontend/app.py --server.port 8501
 ```
 
+## Step 11A: API Quality Fixes
+
+Step 11A improves API validation and error handling.
+
+Why this exists:
+
+- blank questions should not run retrieval
+- feedback labels should use known values only
+- OpenSearch failures should return a clear service error
+- missing OpenAI configuration should return a clear service error
+
+Validation added:
+
+```text
+question: 3 to 1000 non-space characters
+top_k: 1 to 10
+useful_label: useful, not_useful, unsure
+correctness_label: correct, incorrect, unsure
+evidence_label: supported, weak, missing, unsure
+note: up to 1000 characters
+```
+
+Check blank question validation:
+
+```bash
+curl -i -X POST http://127.0.0.1:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "   ",
+    "top_k": 2,
+    "use_llm": false
+  }'
+```
+
+Expected status:
+
+```text
+422 Unprocessable Entity
+```
+
+Check invalid feedback label validation:
+
+```bash
+curl -i -X POST http://127.0.0.1:8000/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query_id": 1,
+    "useful_label": "bad_value",
+    "correctness_label": "correct",
+    "evidence_label": "supported"
+  }'
+```
+
+Expected status:
+
+```text
+422 Unprocessable Entity
+```
+
+If OpenSearch is unavailable, `/query` returns:
+
+```json
+{
+  "detail": "Search service is unavailable or the chunk index is not ready."
+}
+```
+
+If OpenAI mode is requested but `OPENAI_API_KEY` is missing, `/query` returns:
+
+```json
+{
+  "detail": "OpenAI answer generation is not configured. Check OPENAI_API_KEY."
+}
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

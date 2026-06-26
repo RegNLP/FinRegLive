@@ -212,6 +212,7 @@ Completed:
 - Phase 9C: feedback API connected to saved query IDs
 - Phase 9D: diagnostics API for database and OpenSearch status
 - Phase 10: Streamlit frontend for query, sources, feedback, and diagnostics
+- Phase 11A: API validation and cleaner service error responses
 
 Current working flow:
 
@@ -234,6 +235,7 @@ SEC RSS / FCA HTML
   -> feedback storage
   -> diagnostics checks
   -> Streamlit user interface
+  -> API quality checks
 ```
 
 Not built yet:

@@ -16,21 +16,32 @@
 
 from time import perf_counter
 
-from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException
+from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
+from opensearchpy.exceptions import NotFoundError, TransportError
+from pydantic import BaseModel, Field, field_validator
 
 from backend.database.crud import create_query_log
 from backend.database.db import init_db
 from backend.generation.answer import answer_question, answer_question_with_llm
+from backend.generation.llm_client import LLMGenerationError, MissingOpenAIAPIKeyError
 from backend.generation.models import GroundedAnswer
 
 router = APIRouter(tags=["query"])
 
 
 class QueryRequest(BaseModel):
-    question: str = Field(min_length=3)
+    question: str = Field(min_length=3, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=10)
     use_llm: bool = False
+
+    @field_validator("question")
+    @classmethod
+    def clean_question(cls, value: str) -> str:
+        cleaned_value = value.strip()
+        if len(cleaned_value) < 3:
+            raise ValueError("Question must contain at least 3 non-space characters.")
+        return cleaned_value
 
 
 @router.post("/query", response_model=GroundedAnswer)
@@ -40,10 +51,26 @@ def query(request: QueryRequest) -> GroundedAnswer:
     started_at = perf_counter()
     answer_mode = "openai" if request.use_llm else "local"
 
-    if request.use_llm:
-        answer = answer_question_with_llm(request.question, top_k=request.top_k)
-    else:
-        answer = answer_question(request.question, top_k=request.top_k)
+    try:
+        if request.use_llm:
+            answer = answer_question_with_llm(request.question, top_k=request.top_k)
+        else:
+            answer = answer_question(request.question, top_k=request.top_k)
+    except (OpenSearchConnectionError, NotFoundError, TransportError) as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Search service is unavailable or the chunk index is not ready.",
+        ) from exc
+    except MissingOpenAIAPIKeyError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OpenAI answer generation is not configured. Check OPENAI_API_KEY.",
+        ) from exc
+    except LLMGenerationError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OpenAI answer generation failed. Try local mode or retry later.",
+        ) from exc
 
     latency_ms = int((perf_counter() - started_at) * 1000)
     query_log = create_query_log(
