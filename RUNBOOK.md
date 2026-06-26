@@ -971,6 +971,62 @@ for feedback in list_feedback()[:5]:
 PY
 ```
 
+## Step 9D: Diagnostics API Endpoint
+
+Step 9D adds one endpoint for checking local system state.
+
+Why this exists:
+
+- diagnostics quickly show whether the database is initialized
+- diagnostics show how many documents, chunks, queries, and feedback rows exist
+- diagnostics show whether OpenSearch is reachable
+- diagnostics show whether the configured chunk index exists
+- diagnostics show how many chunks are indexed in OpenSearch
+
+Files added or updated:
+
+```text
+backend/api/diagnostics.py
+backend/database/crud.py
+backend/main.py
+```
+
+Call diagnostics:
+
+```bash
+curl http://127.0.0.1:8000/diagnostics
+```
+
+Pretty-print diagnostics:
+
+```bash
+curl -s http://127.0.0.1:8000/diagnostics | python -m json.tool
+```
+
+Expected response shape:
+
+```json
+{
+  "environment": "local",
+  "database": {
+    "status": "ok",
+    "document_count": 5,
+    "chunk_count": 3,
+    "query_count": 3,
+    "feedback_count": 1
+  },
+  "search": {
+    "status": "ok",
+    "host": "http://localhost:9200",
+    "index_name": "finreg_chunks",
+    "index_exists": true,
+    "indexed_chunk_count": 3
+  }
+}
+```
+
+The exact counts may be different on your machine depending on how many test commands you have run.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

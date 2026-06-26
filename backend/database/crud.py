@@ -15,7 +15,7 @@
 
 import json
 
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
 from backend.database.db import engine
 from backend.database.models import Chunk, Document, Feedback, QueryLog
@@ -166,3 +166,23 @@ def list_feedback() -> list[Feedback]:
     with Session(engine) as session:
         statement = select(Feedback).order_by(Feedback.created_at.desc())
         return list(session.exec(statement))
+
+
+def count_documents() -> int:
+    with Session(engine) as session:
+        return session.exec(select(func.count()).select_from(Document)).one()
+
+
+def count_chunks() -> int:
+    with Session(engine) as session:
+        return session.exec(select(func.count()).select_from(Chunk)).one()
+
+
+def count_query_logs() -> int:
+    with Session(engine) as session:
+        return session.exec(select(func.count()).select_from(QueryLog)).one()
+
+
+def count_feedback() -> int:
+    with Session(engine) as session:
+        return session.exec(select(func.count()).select_from(Feedback)).one()

@@ -210,6 +210,7 @@ Completed:
 - Phase 9A: FastAPI `/query` endpoint for local and OpenAI answer generation
 - Phase 9B: query logging for `/query` requests
 - Phase 9C: feedback API connected to saved query IDs
+- Phase 9D: diagnostics API for database and OpenSearch status
 
 Current working flow:
 
@@ -230,6 +231,7 @@ SEC RSS / FCA HTML
   -> FastAPI /query endpoint
   -> SQLite query log
   -> feedback storage
+  -> diagnostics checks
 ```
 
 Not built yet:
