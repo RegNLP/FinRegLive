@@ -16,6 +16,7 @@
 
 from fastapi import FastAPI
 
+from backend.api.feedback import router as feedback_router
 from backend.api.query import router as query_router
 from backend.config import get_settings
 from backend.database.db import init_db
@@ -42,3 +43,4 @@ def db_check() -> dict[str, str]:
 
 
 app.include_router(query_router)
+app.include_router(feedback_router)

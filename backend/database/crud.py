@@ -18,7 +18,7 @@ import json
 from sqlmodel import Session, select
 
 from backend.database.db import engine
-from backend.database.models import Chunk, Document, QueryLog
+from backend.database.models import Chunk, Document, Feedback, QueryLog
 
 
 def get_document_by_hash(content_hash: str) -> Document | None:
@@ -132,4 +132,37 @@ def create_query_log(
 def list_query_logs() -> list[QueryLog]:
     with Session(engine) as session:
         statement = select(QueryLog).order_by(QueryLog.created_at.desc())
+        return list(session.exec(statement))
+
+
+def get_query_log(query_id: int) -> QueryLog | None:
+    with Session(engine) as session:
+        return session.get(QueryLog, query_id)
+
+
+def create_feedback(
+    query_id: int,
+    useful_label: str,
+    correctness_label: str,
+    evidence_label: str,
+    note: str | None = None,
+) -> Feedback:
+    feedback = Feedback(
+        query_id=query_id,
+        useful_label=useful_label,
+        correctness_label=correctness_label,
+        evidence_label=evidence_label,
+        note=note,
+    )
+
+    with Session(engine) as session:
+        session.add(feedback)
+        session.commit()
+        session.refresh(feedback)
+        return feedback
+
+
+def list_feedback() -> list[Feedback]:
+    with Session(engine) as session:
+        statement = select(Feedback).order_by(Feedback.created_at.desc())
         return list(session.exec(statement))

@@ -896,6 +896,81 @@ for log in list_query_logs()[:5]:
 PY
 ```
 
+## Step 9C: Feedback API Endpoint
+
+Step 9C stores user feedback for a saved query.
+
+Why this exists:
+
+- feedback tells us whether an answer was useful
+- feedback tells us whether the answer looked correct
+- feedback tells us whether the cited evidence was good enough
+- feedback must connect to `query_id` so we know which answer was reviewed
+
+Files added or updated:
+
+```text
+backend/api/feedback.py
+backend/database/crud.py
+backend/main.py
+```
+
+First, create a query and note the returned `query_id`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What did the SEC and CFTC publish about derivatives?",
+    "top_k": 2,
+    "use_llm": false
+  }'
+```
+
+Then submit feedback using that `query_id`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query_id": 1,
+    "useful_label": "useful",
+    "correctness_label": "correct",
+    "evidence_label": "supported",
+    "note": "The answer cites the two relevant SEC/CFTC updates."
+  }'
+```
+
+Expected response shape:
+
+```json
+{
+  "feedback_id": 1,
+  "query_id": 1,
+  "status": "stored"
+}
+```
+
+Check recent feedback rows:
+
+```bash
+python - <<'PY'
+from backend.database.crud import list_feedback
+from backend.database.db import init_db
+
+init_db()
+
+for feedback in list_feedback()[:5]:
+    print("id:", feedback.id)
+    print("query_id:", feedback.query_id)
+    print("useful:", feedback.useful_label)
+    print("correctness:", feedback.correctness_label)
+    print("evidence:", feedback.evidence_label)
+    print("note:", feedback.note)
+    print("---")
+PY
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
