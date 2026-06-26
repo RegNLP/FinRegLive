@@ -217,11 +217,13 @@ Completed:
 - Phase 11C: document and recent update API endpoints
 - Phase 11D: Streamlit UI polish with recent updates and document inspection
 - Phase 12: Docker Compose setup for OpenSearch, backend, and frontend
+- Recent ingestion command for last-week RSS updates and HTML source snapshots
 
 Current working flow:
 
 ```text
 SEC RSS / FCA HTML
+  -> recent ingestion command
   -> IngestedDocument
   -> content hash
   -> duplicate check
@@ -248,7 +250,8 @@ SEC RSS / FCA HTML
 
 Not built yet:
 
-- full Docker setup for backend/frontend
+- scheduled ingestion
+- cloud deployment
 
 ### Phase 0: Project Understanding
 

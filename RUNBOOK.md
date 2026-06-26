@@ -1426,32 +1426,25 @@ Run a backend command inside Docker:
 docker compose -f infra/docker-compose.yml exec backend python -m backend.indexing.manage_index
 ```
 
-Prepare a small Docker demo dataset:
+Ingest recent source data from the last 7 days:
 
 ```bash
-docker compose -f infra/docker-compose.yml exec -T backend python - <<'PY'
-from backend.ingestion.rss import fetch_rss
-from backend.ingestion.store import store_ingested_documents
-from backend.processing.build_chunks import build_chunks_for_stored_documents
-from backend.indexing.index_chunks import index_chunks
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
+  python -m backend.ingestion.recent --days 7 --source all --limit 50 --recreate-index
+```
 
-documents = fetch_rss(
-    source_name="SEC",
-    source_url="https://www.sec.gov/news/pressreleases.rss",
-    limit=3,
-)
+Ingest only SEC RSS:
 
-store_result = store_ingested_documents(documents)
-chunk_result = build_chunks_for_stored_documents()
-index_result = index_chunks(recreate_index=True)
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
+  python -m backend.ingestion.recent --days 7 --source sec --limit 50 --recreate-index
+```
 
-print("documents_fetched:", len(documents))
-print("stored:", store_result.stored)
-print("duplicates:", store_result.duplicates)
-print("documents_processed:", chunk_result.documents_processed)
-print("chunks_created:", chunk_result.chunks_created)
-print("chunks_indexed:", index_result.chunks_indexed)
-PY
+Ingest only the FCA HTML news page snapshot:
+
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
+  python -m backend.ingestion.recent --days 7 --source fca --recreate-index
 ```
 
 Test a Docker API query:
