@@ -1,6 +1,7 @@
 fastapi
 beautifulsoup4
 feedparser
+opensearch-py
 PyYAML
 requests
 sqlmodel

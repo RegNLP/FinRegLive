@@ -559,6 +559,40 @@ Stop OpenSearch and delete the local OpenSearch volume:
 docker compose -f infra/docker-compose.yml down -v
 ```
 
+### Step 6B: Check Python OpenSearch Client
+
+Install updated dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Make sure OpenSearch is running:
+
+```bash
+docker compose -f infra/docker-compose.yml ps
+```
+
+Then run:
+
+```bash
+python - <<'PY'
+from backend.search.client import get_search_client, ping_search
+
+client = get_search_client()
+
+print("ping:", ping_search())
+print("info:", client.info()["version"]["distribution"], client.info()["version"]["number"])
+PY
+```
+
+Expected result:
+
+```text
+ping: True
+info: opensearch 2.13.0
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

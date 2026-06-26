@@ -199,6 +199,7 @@ Completed:
 - Phase 4b: storing ingested documents and skipping duplicates
 - Phase 5: word-based chunking and chunk storage
 - Phase 6A: local OpenSearch service with Docker Compose
+- Phase 6B: OpenSearch Python client
 
 Current working flow:
 
@@ -215,7 +216,6 @@ SEC RSS / FCA HTML
 Not built yet:
 
 - OpenSearch indexing
-- OpenSearch Python client
 - OpenSearch index schema
 - embeddings
 - retrieval
