@@ -17,6 +17,7 @@ import argparse
 
 from backend.generation.llm_client import generate_openai_answer
 from backend.generation.models import AnswerSource, GroundedAnswer
+from backend.reranking.lexical import rerank_lexical
 from backend.retrieval.hybrid import retrieve_hybrid
 from backend.retrieval.models import RetrievalResult
 
@@ -60,13 +61,42 @@ def build_local_answer(question: str, evidence: list[RetrievalResult]) -> Ground
     )
 
 
-def answer_question(question: str, top_k: int = 5) -> GroundedAnswer:
-    evidence = retrieve_hybrid(question, top_k=top_k)
+def retrieve_answer_evidence(
+    question: str,
+    top_k: int = 5,
+    use_reranking: bool = False,
+) -> list[RetrievalResult]:
+    if not use_reranking:
+        return retrieve_hybrid(question, top_k=top_k)
+
+    candidate_k = min(max(top_k * 4, top_k), 50)
+    candidates = retrieve_hybrid(question, top_k=candidate_k)
+    return rerank_lexical(question, candidates, top_k=top_k)
+
+
+def answer_question(
+    question: str,
+    top_k: int = 5,
+    use_reranking: bool = False,
+) -> GroundedAnswer:
+    evidence = retrieve_answer_evidence(
+        question,
+        top_k=top_k,
+        use_reranking=use_reranking,
+    )
     return build_local_answer(question, evidence)
 
 
-def answer_question_with_llm(question: str, top_k: int = 5) -> GroundedAnswer:
-    evidence = retrieve_hybrid(question, top_k=top_k)
+def answer_question_with_llm(
+    question: str,
+    top_k: int = 5,
+    use_reranking: bool = False,
+) -> GroundedAnswer:
+    evidence = retrieve_answer_evidence(
+        question,
+        top_k=top_k,
+        use_reranking=use_reranking,
+    )
 
     if not evidence:
         return build_local_answer(question, evidence)
@@ -107,12 +137,25 @@ def main() -> None:
     parser.add_argument("question")
     parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument("--use-llm", action="store_true")
+    parser.add_argument("--use-reranking", action="store_true")
     args = parser.parse_args()
 
     if args.use_llm:
-        print_answer(answer_question_with_llm(args.question, top_k=args.top_k))
+        print_answer(
+            answer_question_with_llm(
+                args.question,
+                top_k=args.top_k,
+                use_reranking=args.use_reranking,
+            )
+        )
     else:
-        print_answer(answer_question(args.question, top_k=args.top_k))
+        print_answer(
+            answer_question(
+                args.question,
+                top_k=args.top_k,
+                use_reranking=args.use_reranking,
+            )
+        )
 
 
 if __name__ == "__main__":

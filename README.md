@@ -222,6 +222,8 @@ Completed:
 - Phase 13: FCA item-level ingestion for news and publications
 - Phase 14A/14B: corpus analytics endpoint and Streamlit Analytics tab
 - Phase 14C: ingestion run tracking with recent run history
+- Phase 15: retrieval diagnostics API and Streamlit Retrieval tab
+- Phase 16: local lexical reranking for hybrid retrieval candidates
 
 Current working flow:
 
@@ -252,12 +254,13 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> UI-triggered ingestion
   -> corpus analytics
   -> ingestion run history
+  -> retrieval diagnostics
+  -> optional reranking before answer generation
   -> Docker Compose local stack
 ```
 
 Not built yet:
 
-- retrieval diagnostics
 - evaluation runners
 - scheduled ingestion
 - cloud deployment
@@ -834,7 +837,7 @@ Checkpoint:
 
 - We can quickly answer what data exists, when it was ingested, and which sources failed
 
-### Phase 15: Retrieval Diagnostics and Optional Reranking
+### Phase 15: Retrieval Diagnostics
 
 Goal:
 
@@ -844,13 +847,32 @@ Deliverables:
 
 - BM25 vs vector vs hybrid comparison for the same query
 - retrieved chunk score display
-- optional cross-encoder reranking experiment
+- overlap metrics showing where retrieval methods agree
 
 Checkpoint:
 
 - We can explain why a query retrieved specific evidence
 
-### Phase 16: Evaluation Layer
+### Phase 16: Reranking
+
+Goal:
+
+- Improve evidence ranking after the first hybrid retrieval step
+- Reduce weak or off-topic chunks before answer generation
+
+Deliverables:
+
+- reranking module
+- reranker applied after hybrid retrieval
+- optional `/query` setting for reranking
+- Streamlit toggle for reranking
+- tests comparing reranked and non-reranked behavior
+
+Checkpoint:
+
+- We can retrieve more candidates than needed, rerank them, and pass the strongest chunks to generation
+
+### Phase 17: Evaluation Layer
 
 Goal:
 
@@ -867,7 +889,7 @@ Checkpoint:
 
 - A small evaluation run produces repeatable scores and failure examples
 
-### Phase 17: Cloud-Ready Architecture
+### Phase 18: Cloud-Ready Architecture
 
 Goal:
 
@@ -888,7 +910,7 @@ Checkpoint:
 
 - Each local component has a clear production equivalent
 
-### Phase 18: Final README and Presentation Rewrite
+### Phase 19: Final README and Presentation Rewrite
 
 Goal:
 

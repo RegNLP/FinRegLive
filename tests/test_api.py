@@ -80,6 +80,31 @@ def test_query_returns_answer_and_query_id() -> None:
     assert payload["sources"][0]["chunk_id"] == "1"
 
 
+def test_query_can_use_reranking() -> None:
+    with (
+        patch("backend.api.query.init_db"),
+        patch("backend.api.query.answer_question", return_value=sample_answer()) as answer_question,
+        patch("backend.api.query.create_query_log", return_value=SimpleNamespace(id=42)) as create_query_log,
+    ):
+        response = client.post(
+            "/query",
+            json={
+                "question": "What did regulators publish?",
+                "top_k": 2,
+                "use_llm": False,
+                "use_reranking": True,
+            },
+        )
+
+    assert response.status_code == 200
+    answer_question.assert_called_once_with(
+        "What did regulators publish?",
+        top_k=2,
+        use_reranking=True,
+    )
+    assert create_query_log.call_args.kwargs["retrieval_method"] == "hybrid_reranked"
+
+
 def test_query_returns_503_when_search_is_unavailable() -> None:
     with (
         patch("backend.api.query.init_db"),

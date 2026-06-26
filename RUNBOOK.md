@@ -1508,6 +1508,14 @@ curl -X POST http://127.0.0.1:8000/query \
   -d '{"question":"What did the SEC and CFTC publish about derivatives?","top_k":2,"use_llm":false}'
 ```
 
+Test a Docker API query with reranking:
+
+```bash
+curl -X POST http://127.0.0.1:8000/query \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What recent FCA updates mention listing rules or investment funds?","top_k":3,"use_llm":false,"use_reranking":true}'
+```
+
 Compare BM25, vector, and hybrid retrieval:
 
 ```bash

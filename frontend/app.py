@@ -266,11 +266,13 @@ def render_ask_page() -> None:
             value="What did the SEC and CFTC publish about derivatives?",
             height=120,
         )
-        col_a, col_b = st.columns([1, 1])
+        col_a, col_b, col_c = st.columns([1, 1, 1])
         with col_a:
             top_k = st.slider("Sources", min_value=1, max_value=10, value=2)
         with col_b:
             use_llm = st.toggle("OpenAI answer", value=False)
+        with col_c:
+            use_reranking = st.toggle("Rerank evidence", value=False)
 
         submitted = st.form_submit_button("Run query")
 
@@ -282,6 +284,7 @@ def render_ask_page() -> None:
                     "question": question,
                     "top_k": top_k,
                     "use_llm": use_llm,
+                    "use_reranking": use_reranking,
                 },
             )
         except requests.RequestException as exc:

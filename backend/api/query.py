@@ -9,7 +9,7 @@
 #   grounded answer.
 #
 # Input:
-#   POST /query with question, top_k, and use_llm.
+#   POST /query with question, top_k, use_llm, and use_reranking.
 #
 # Output:
 #   Grounded answer JSON with query_id, sources, and limitations.
@@ -34,6 +34,7 @@ class QueryRequest(BaseModel):
     question: str = Field(min_length=3, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=10)
     use_llm: bool = False
+    use_reranking: bool = False
 
     @field_validator("question")
     @classmethod
@@ -53,9 +54,17 @@ def query(request: QueryRequest) -> GroundedAnswer:
 
     try:
         if request.use_llm:
-            answer = answer_question_with_llm(request.question, top_k=request.top_k)
+            answer = answer_question_with_llm(
+                request.question,
+                top_k=request.top_k,
+                use_reranking=request.use_reranking,
+            )
         else:
-            answer = answer_question(request.question, top_k=request.top_k)
+            answer = answer_question(
+                request.question,
+                top_k=request.top_k,
+                use_reranking=request.use_reranking,
+            )
     except (OpenSearchConnectionError, NotFoundError, TransportError) as exc:
         raise HTTPException(
             status_code=503,
@@ -75,7 +84,7 @@ def query(request: QueryRequest) -> GroundedAnswer:
     latency_ms = int((perf_counter() - started_at) * 1000)
     query_log = create_query_log(
         query_text=request.question,
-        retrieval_method="hybrid",
+        retrieval_method="hybrid_reranked" if request.use_reranking else "hybrid",
         answer_mode=answer_mode,
         top_k=request.top_k,
         retrieved_chunk_ids=[source.chunk_id for source in answer.sources],
