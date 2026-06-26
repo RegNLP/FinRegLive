@@ -1466,14 +1466,14 @@ docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
   python -m backend.ingestion.recent --days 7 --source sec_edgar --limit 50 --recreate-index
 ```
 
-Ingest only the FCA HTML news page snapshot:
+Ingest FCA news as individual item pages:
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
   python -m backend.ingestion.recent --days 7 --source fca_news --recreate-index
 ```
 
-Ingest only the FCA publications page snapshot:
+Ingest FCA publications as individual item pages:
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \

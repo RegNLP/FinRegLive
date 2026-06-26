@@ -22,6 +22,7 @@ from email.utils import parsedate_to_datetime
 from pydantic import BaseModel
 
 from backend.indexing.index_chunks import IndexChunksResult, index_chunks
+from backend.ingestion.fca import fetch_fca_listing_items
 from backend.ingestion.html import fetch_html
 from backend.ingestion.models import IngestedDocument
 from backend.ingestion.rss import fetch_rss
@@ -52,15 +53,15 @@ SOURCES = {
     ),
     "fca_news": SourceDefinition(
         key="fca_news",
-        source_name="FCA",
+        source_name="FCA News",
         source_url="https://www.fca.org.uk/news",
-        source_type="html",
+        source_type="fca_listing",
     ),
     "fca_publications": SourceDefinition(
         key="fca_publications",
         source_name="FCA Publications",
         source_url="https://www.fca.org.uk/publications",
-        source_type="html",
+        source_type="fca_listing",
     ),
     "boe_news": SourceDefinition(
         key="boe_news",
@@ -152,6 +153,14 @@ def fetch_recent_source(
     if source.source_type == "html":
         document = fetch_html(source_name=source.source_name, source_url=source.source_url)
         return [document], 1
+
+    if source.source_type == "fca_listing":
+        documents = fetch_fca_listing_items(
+            source_name=source.source_name,
+            listing_url=source.source_url,
+            limit=limit,
+        )
+        return documents, 0
 
     raise ValueError(f"Unsupported source type: {source.source_type}")
 

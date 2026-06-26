@@ -219,11 +219,12 @@ Completed:
 - Phase 12: Docker Compose setup for OpenSearch, backend, and frontend
 - Recent ingestion command for SEC, FCA, and Bank of England sources
 - Evaluation question set in `evaluation/questions.jsonl`
+- Phase 13: FCA item-level ingestion for news and publications
 
 Current working flow:
 
 ```text
-SEC RSS / SEC EDGAR / FCA HTML / Bank of England RSS
+SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> recent ingestion command
   -> IngestedDocument
   -> content hash
@@ -251,7 +252,6 @@ SEC RSS / SEC EDGAR / FCA HTML / Bank of England RSS
 
 Not built yet:
 
-- FCA item-level ingestion
 - corpus and ingestion analytics
 - retrieval diagnostics
 - evaluation runners
