@@ -54,12 +54,7 @@ Evidence:
 {format_evidence(evidence)}
 
 Answer format:
-Answer:
-<answer grounded only in the evidence>
-
-Sources:
-<chunk IDs used>
-
-Limitations:
-<any missing or insufficient evidence>
+Write only the answer paragraph.
+Do not include separate headings for Answer, Sources, or Limitations.
+Mention chunk IDs inline when citing evidence, for example [2].
 """

@@ -37,4 +37,4 @@ def generate_openai_answer(question: str, evidence: list[RetrievalResult]) -> st
         max_output_tokens=700,
     )
 
-    return response.output_text
+    return response.output_text.strip()

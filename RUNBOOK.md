@@ -794,6 +794,7 @@ python -m backend.generation.answer "What did the SEC and CFTC publish about der
 ```
 
 The retrieval still happens locally through OpenSearch. OpenAI only receives the question and retrieved evidence.
+The app prints sources and limitations separately, so the LLM should return only the answer text.
 
 ## Checks So Far
 
