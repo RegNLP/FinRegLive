@@ -38,6 +38,12 @@ class ProcessingSettings(BaseModel):
     chunk_overlap_words: int
 
 
+class EmbeddingSettings(BaseModel):
+    provider: str
+    model_name: str
+    dimension: int
+
+
 class LLMSettings(BaseModel):
     provider: str
     model: str
@@ -48,6 +54,7 @@ class AppSettings(BaseModel):
     database: DatabaseSettings
     search: SearchSettings
     processing: ProcessingSettings
+    embeddings: EmbeddingSettings
     llm: LLMSettings
 
 

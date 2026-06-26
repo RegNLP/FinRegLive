@@ -593,6 +593,38 @@ ping: True
 info: opensearch 2.13.0
 ```
 
+### Step 6C: Create OpenSearch Index
+
+Create the chunk index:
+
+```bash
+python -m backend.indexing.manage_index
+```
+
+Expected first result:
+
+```text
+created: finreg_chunks
+```
+
+Expected later result if the index already exists:
+
+```text
+exists: finreg_chunks
+```
+
+Recreate the index from scratch:
+
+```bash
+python -m backend.indexing.manage_index --recreate
+```
+
+Check the mapping:
+
+```bash
+curl http://localhost:9200/finreg_chunks/_mapping
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

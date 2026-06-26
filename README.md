@@ -200,6 +200,7 @@ Completed:
 - Phase 5: word-based chunking and chunk storage
 - Phase 6A: local OpenSearch service with Docker Compose
 - Phase 6B: OpenSearch Python client
+- Phase 6C: OpenSearch index schema
 
 Current working flow:
 
@@ -216,7 +217,6 @@ SEC RSS / FCA HTML
 Not built yet:
 
 - OpenSearch indexing
-- OpenSearch index schema
 - embeddings
 - retrieval
 - LLM answer generation

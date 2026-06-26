@@ -13,6 +13,11 @@ processing:
   chunk_size_words: 120
   chunk_overlap_words: 20
 
+embeddings:
+  provider: local
+  model_name: BAAI/bge-small-en-v1.5
+  dimension: 384
+
 llm:
   provider: openai
   model: gpt-4o-mini
