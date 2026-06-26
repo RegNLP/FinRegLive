@@ -742,6 +742,36 @@ Expected result:
 Ranked evidence chunks with score, title, source, URL, and text preview.
 ```
 
+## Step 8: Answer Generation
+
+Step 8 turns retrieved evidence into a source-grounded answer.
+
+Files added:
+
+```text
+backend/generation/__init__.py
+backend/generation/models.py
+backend/generation/prompts.py
+backend/generation/answer.py
+```
+
+Run a grounded answer:
+
+```bash
+python -m backend.generation.answer "What did the SEC and CFTC publish about derivatives?"
+```
+
+Expected result:
+
+```text
+Question
+Answer
+Sources
+Limitations
+```
+
+The current answer generator is a local grounded fallback. It uses retrieved evidence only and does not call an LLM yet.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

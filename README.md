@@ -205,6 +205,7 @@ Completed:
 - Phase 6E: indexing chunks into OpenSearch
 - Phase 6F: manual BM25 and vector search checks
 - Phase 7: BM25, vector, and hybrid retrieval
+- Phase 8: local source-grounded answer generation
 
 Current working flow:
 
@@ -220,11 +221,12 @@ SEC RSS / FCA HTML
   -> OpenSearch chunk index
   -> BM25/vector search checks
   -> reusable retrieval functions
+  -> source-grounded answer with citations
 ```
 
 Not built yet:
 
-- LLM answer generation
+- OpenAI/LLM answer generation
 - Streamlit frontend
 - full Docker setup for backend/frontend
 
