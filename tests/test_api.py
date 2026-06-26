@@ -21,6 +21,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 
+from backend.database.models import Chunk, Document
 from backend.generation.llm_client import MissingOpenAIAPIKeyError
 from backend.generation.models import AnswerSource, GroundedAnswer
 from backend.main import app
@@ -151,3 +152,78 @@ def test_feedback_stores_for_existing_query() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"feedback_id": 99, "query_id": 7, "status": "stored"}
+
+
+def sample_document() -> Document:
+    return Document(
+        id=7,
+        title="Sample SEC Update",
+        source_name="SEC",
+        source_url="https://example.com/sec",
+        text="Sample regulatory update text.",
+        content_hash="sample-hash",
+        publication_date="2026-06-25",
+    )
+
+
+def sample_chunk() -> Chunk:
+    return Chunk(
+        id=11,
+        document_id=7,
+        chunk_index=0,
+        text="Sample regulatory update text.",
+    )
+
+
+def test_documents_lists_document_summaries() -> None:
+    with (
+        patch("backend.api.documents.init_db"),
+        patch("backend.api.documents.list_documents", return_value=[sample_document()]),
+        patch("backend.api.documents.get_chunks_for_document", return_value=[sample_chunk()]),
+    ):
+        response = client.get("/documents")
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload[0]["id"] == 7
+    assert payload[0]["chunk_count"] == 1
+    assert payload[0]["text_length"] == len("Sample regulatory update text.")
+
+
+def test_document_detail_returns_text_and_chunks() -> None:
+    with (
+        patch("backend.api.documents.init_db"),
+        patch("backend.api.documents.get_document", return_value=sample_document()),
+        patch("backend.api.documents.get_chunks_for_document", return_value=[sample_chunk()]),
+    ):
+        response = client.get("/documents/7")
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload["id"] == 7
+    assert payload["text"] == "Sample regulatory update text."
+    assert payload["chunks"][0]["id"] == 11
+
+
+def test_document_detail_returns_404_for_missing_document() -> None:
+    with (
+        patch("backend.api.documents.init_db"),
+        patch("backend.api.documents.get_document", return_value=None),
+    ):
+        response = client.get("/documents/999")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "document_id was not found"}
+
+
+def test_recent_updates_lists_document_summaries() -> None:
+    with (
+        patch("backend.api.documents.init_db"),
+        patch("backend.api.documents.list_documents", return_value=[sample_document()]),
+        patch("backend.api.documents.get_chunks_for_document", return_value=[sample_chunk()]),
+    ):
+        response = client.get("/recent-updates")
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload[0]["title"] == "Sample SEC Update"

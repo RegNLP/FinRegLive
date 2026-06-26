@@ -214,6 +214,7 @@ Completed:
 - Phase 10: Streamlit frontend for query, sources, feedback, and diagnostics
 - Phase 11A: API validation and cleaner service error responses
 - Phase 11B: pytest coverage for chunking, deduplication, and API behavior
+- Phase 11C: document and recent update API endpoints
 
 Current working flow:
 
@@ -238,6 +239,7 @@ SEC RSS / FCA HTML
   -> Streamlit user interface
   -> API quality checks
   -> automated tests
+  -> document browsing endpoints
 ```
 
 Not built yet:

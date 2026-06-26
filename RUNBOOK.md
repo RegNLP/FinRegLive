@@ -1205,7 +1205,7 @@ python -m pytest -q
 Expected result:
 
 ```text
-12 passed
+16 passed
 ```
 
 Note:
@@ -1213,6 +1213,82 @@ Note:
 - `readline.py` is a local compatibility stub.
 - It exists because this macOS/conda Python environment crashes on native `import readline` during pytest startup.
 - The application does not depend on readline.
+
+## Step 11C: Documents and Recent Updates Endpoints
+
+Step 11C adds read-only endpoints for browsing stored documents.
+
+Why this exists:
+
+- users need to see which public documents were ingested
+- the frontend needs a way to show recent updates
+- document detail should show the original text and retrieval chunks
+
+Files added or updated:
+
+```text
+backend/api/documents.py
+backend/main.py
+tests/test_api.py
+README.md
+RUNBOOK.md
+```
+
+List documents:
+
+```bash
+curl http://127.0.0.1:8000/documents
+```
+
+Pretty-print documents:
+
+```bash
+curl -s http://127.0.0.1:8000/documents | python -m json.tool
+```
+
+Limit document count:
+
+```bash
+curl "http://127.0.0.1:8000/documents?limit=5"
+```
+
+Get one document with text and chunks:
+
+```bash
+curl -s http://127.0.0.1:8000/documents/1 | python -m json.tool
+```
+
+Get recent updates:
+
+```bash
+curl -s http://127.0.0.1:8000/recent-updates | python -m json.tool
+```
+
+Limit recent updates:
+
+```bash
+curl "http://127.0.0.1:8000/recent-updates?limit=5"
+```
+
+Response fields for document lists:
+
+```text
+id
+title
+source_name
+source_url
+publication_date
+created_at
+text_length
+chunk_count
+```
+
+Extra fields for document detail:
+
+```text
+text
+chunks
+```
 
 ## Checks So Far
 
