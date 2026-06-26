@@ -215,6 +215,7 @@ Completed:
 - Phase 11A: API validation and cleaner service error responses
 - Phase 11B: pytest coverage for chunking, deduplication, and API behavior
 - Phase 11C: document and recent update API endpoints
+- Phase 11D: Streamlit UI polish with recent updates and document inspection
 
 Current working flow:
 
@@ -240,6 +241,7 @@ SEC RSS / FCA HTML
   -> API quality checks
   -> automated tests
   -> document browsing endpoints
+  -> recent updates UI
 ```
 
 Not built yet:

@@ -1290,6 +1290,52 @@ text
 chunks
 ```
 
+## Step 11D: Streamlit UI Polish
+
+Step 11D improves the frontend with document browsing.
+
+What changed:
+
+- added a `Recent Updates` tab
+- recent updates call `GET /recent-updates`
+- document inspection calls `GET /documents/{document_id}`
+- document summaries show source, chunk count, text length, and source link
+- document detail can show stored text and chunks
+
+Run backend:
+
+```bash
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+Run frontend:
+
+```bash
+.venv/bin/python -m streamlit run frontend/app.py --server.port 8502
+```
+
+Open:
+
+```text
+http://localhost:8502
+```
+
+Quick frontend API helper check:
+
+```bash
+python - <<'PY'
+from frontend.app import api_get
+
+updates = api_get("/recent-updates?limit=2")
+print("updates:", len(updates))
+
+if updates:
+    detail = api_get(f"/documents/{updates[0]['id']}")
+    print("title:", detail["title"])
+    print("chunks:", len(detail["chunks"]))
+PY
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

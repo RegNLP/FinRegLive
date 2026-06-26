@@ -76,6 +76,73 @@ def render_sources(sources: list[dict[str, Any]]) -> None:
             st.code(f"chunk_id: {source['chunk_id']}", language="text")
 
 
+def render_document_summary(document: dict[str, Any]) -> None:
+    title = document["title"]
+    source_name = document["source_name"]
+    publication_date = document["publication_date"] or "No publication date"
+    chunk_count = document["chunk_count"]
+    text_length = document["text_length"]
+
+    with st.expander(title):
+        meta_a, meta_b, meta_c, meta_d = st.columns(4)
+        meta_a.metric("Document ID", document["id"])
+        meta_b.metric("Source", source_name)
+        meta_c.metric("Chunks", chunk_count)
+        meta_d.metric("Text chars", text_length)
+        st.caption(publication_date)
+        st.link_button("Open source", document["source_url"])
+
+
+def render_recent_updates_page() -> None:
+    st.header("Recent Updates")
+
+    limit = st.slider("Updates to show", min_value=1, max_value=50, value=10)
+
+    try:
+        documents = api_get(f"/recent-updates?limit={limit}")
+    except requests.RequestException as exc:
+        st.error(f"Recent updates failed: {exc}")
+        return
+
+    if not documents:
+        st.info("No documents found. Run ingestion first.")
+        return
+
+    for document in documents:
+        render_document_summary(document)
+
+    st.subheader("Inspect Document")
+    document_options = {
+        f"{document['id']} | {document['title']}": document["id"] for document in documents
+    }
+    selected_label = st.selectbox("Document", options=list(document_options))
+
+    if st.button("Load document"):
+        document_id = document_options[selected_label]
+        try:
+            st.session_state["selected_document"] = api_get(f"/documents/{document_id}")
+        except requests.RequestException as exc:
+            st.error(f"Document load failed: {exc}")
+            return
+
+    selected_document = st.session_state.get("selected_document")
+    if not selected_document:
+        return
+
+    st.write(selected_document["title"])
+    st.caption(selected_document["source_url"])
+
+    with st.expander("Document text", expanded=False):
+        st.write(selected_document["text"] or "No document text stored.")
+
+    with st.expander("Chunks", expanded=True):
+        if not selected_document["chunks"]:
+            st.info("No chunks stored for this document.")
+        for chunk in selected_document["chunks"]:
+            st.markdown(f"**Chunk {chunk['chunk_index']}**")
+            st.write(chunk["text"])
+
+
 def render_feedback_form(query_id: int) -> None:
     with st.form("feedback_form"):
         useful_label = st.selectbox(
@@ -206,9 +273,13 @@ def main() -> None:
     st.title("FinReg Live Intelligence")
     show_api_status()
 
-    ask_tab, diagnostics_tab = st.tabs(["Ask", "Diagnostics"])
+    ask_tab, recent_updates_tab, diagnostics_tab = st.tabs(
+        ["Ask", "Recent Updates", "Diagnostics"]
+    )
     with ask_tab:
         render_ask_page()
+    with recent_updates_tab:
+        render_recent_updates_page()
     with diagnostics_tab:
         render_diagnostics_page()
 
