@@ -18,9 +18,12 @@ import argparse
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+from time import perf_counter
 
 from pydantic import BaseModel
 
+from backend.database.crud import complete_ingestion_run, create_ingestion_run
+from backend.database.db import init_db
 from backend.indexing.index_chunks import IndexChunksResult, index_chunks
 from backend.ingestion.fca import fetch_fca_listing_items
 from backend.ingestion.html import fetch_html
@@ -185,6 +188,13 @@ def ingest_recent_sources(
     should_index: bool = True,
     recreate_index: bool = False,
 ) -> RecentIngestionResult:
+    init_db()
+    started_at = perf_counter()
+    ingestion_run = create_ingestion_run(source_key=source_key, days=days, limit=limit)
+
+    def elapsed_ms() -> int:
+        return int((perf_counter() - started_at) * 1000)
+
     selected_sources = select_sources(source_key)
 
     documents: list[IngestedDocument] = []
@@ -205,12 +215,41 @@ def ingest_recent_sources(
         documents.extend(source_documents)
         html_snapshots += source_html_snapshots
 
-    store_result = store_ingested_documents(documents)
-    chunk_result = build_chunks_for_stored_documents()
+    try:
+        store_result = store_ingested_documents(documents)
+        chunk_result = build_chunks_for_stored_documents()
 
-    index_result = IndexChunksResult(chunks_seen=0, chunks_indexed=0, chunks_skipped=0)
-    if should_index:
-        index_result = index_chunks(recreate_index=recreate_index)
+        index_result = IndexChunksResult(chunks_seen=0, chunks_indexed=0, chunks_skipped=0)
+        if should_index:
+            index_result = index_chunks(recreate_index=recreate_index)
+    except Exception:
+        complete_ingestion_run(
+            ingestion_run_id=ingestion_run.id,
+            status="failed",
+            fetched_documents=len(documents),
+            stored=0,
+            duplicates=0,
+            documents_processed=0,
+            chunks_created=0,
+            chunks_indexed=0,
+            source_failures=source_failures,
+            duration_ms=elapsed_ms(),
+        )
+        raise
+
+    status = "partial_success" if source_failures else "success"
+    complete_ingestion_run(
+        ingestion_run_id=ingestion_run.id,
+        status=status,
+        fetched_documents=len(documents),
+        stored=store_result.stored,
+        duplicates=store_result.duplicates,
+        documents_processed=chunk_result.documents_processed,
+        chunks_created=chunk_result.chunks_created,
+        chunks_indexed=index_result.chunks_indexed,
+        source_failures=source_failures,
+        duration_ms=elapsed_ms(),
+    )
 
     return RecentIngestionResult(
         days=days,

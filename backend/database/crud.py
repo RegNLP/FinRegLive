@@ -18,7 +18,7 @@ import json
 from sqlmodel import Session, func, select
 
 from backend.database.db import engine
-from backend.database.models import Chunk, Document, Feedback, QueryLog
+from backend.database.models import Chunk, Document, Feedback, IngestionRun, QueryLog, utc_now
 
 
 def get_document_by_hash(content_hash: str) -> Document | None:
@@ -165,6 +165,66 @@ def create_feedback(
 def list_feedback() -> list[Feedback]:
     with Session(engine) as session:
         statement = select(Feedback).order_by(Feedback.created_at.desc())
+        return list(session.exec(statement))
+
+
+def create_ingestion_run(
+    source_key: str,
+    days: int,
+    limit: int,
+    status: str = "running",
+) -> IngestionRun:
+    ingestion_run = IngestionRun(
+        source_key=source_key,
+        days=days,
+        limit=limit,
+        status=status,
+    )
+
+    with Session(engine) as session:
+        session.add(ingestion_run)
+        session.commit()
+        session.refresh(ingestion_run)
+        return ingestion_run
+
+
+def complete_ingestion_run(
+    ingestion_run_id: int,
+    status: str,
+    fetched_documents: int,
+    stored: int,
+    duplicates: int,
+    documents_processed: int,
+    chunks_created: int,
+    chunks_indexed: int,
+    source_failures: list[str],
+    duration_ms: int,
+) -> IngestionRun | None:
+    with Session(engine) as session:
+        ingestion_run = session.get(IngestionRun, ingestion_run_id)
+        if ingestion_run is None:
+            return None
+
+        ingestion_run.status = status
+        ingestion_run.fetched_documents = fetched_documents
+        ingestion_run.stored = stored
+        ingestion_run.duplicates = duplicates
+        ingestion_run.documents_processed = documents_processed
+        ingestion_run.chunks_created = chunks_created
+        ingestion_run.chunks_indexed = chunks_indexed
+        ingestion_run.source_failures = json.dumps(source_failures)
+        ingestion_run.duration_ms = duration_ms
+        ingestion_run.finished_at = utc_now()
+
+        session.add(ingestion_run)
+        session.commit()
+        session.refresh(ingestion_run)
+        return ingestion_run
+
+
+def list_ingestion_runs(limit: int = 10) -> list[IngestionRun]:
+    with Session(engine) as session:
+        statement = select(IngestionRun).order_by(IngestionRun.started_at.desc()).limit(limit)
         return list(session.exec(statement))
 
 

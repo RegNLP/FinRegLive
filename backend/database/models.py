@@ -62,3 +62,21 @@ class Feedback(SQLModel, table=True):
     evidence_label: str
     note: str | None = None
     created_at: datetime = Field(default_factory=utc_now)
+
+
+class IngestionRun(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    source_key: str
+    days: int
+    limit: int
+    status: str
+    fetched_documents: int = 0
+    stored: int = 0
+    duplicates: int = 0
+    documents_processed: int = 0
+    chunks_created: int = 0
+    chunks_indexed: int = 0
+    source_failures: str = "[]"
+    duration_ms: int | None = None
+    started_at: datetime = Field(default_factory=utc_now)
+    finished_at: datetime | None = None

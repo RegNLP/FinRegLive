@@ -1399,6 +1399,8 @@ curl http://127.0.0.1:8000/diagnostics
 curl http://127.0.0.1:8000/analytics/corpus
 ```
 
+The analytics response includes corpus totals, source coverage, length statistics, and recent ingestion runs.
+
 Stop services:
 
 ```bash

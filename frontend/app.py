@@ -364,6 +364,13 @@ def render_analytics_page() -> None:
         use_container_width=True,
     )
 
+    st.subheader("Recent Ingestion Runs")
+    st.dataframe(
+        analytics["recent_ingestion_runs"],
+        hide_index=True,
+        use_container_width=True,
+    )
+
 
 def main() -> None:
     st.set_page_config(

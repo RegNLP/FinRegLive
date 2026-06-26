@@ -15,12 +15,13 @@
 #   Corpus-level and source-level analytics for documents and chunks.
 
 from collections import defaultdict
+import json
 from statistics import mean
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.database.crud import list_chunks, list_documents
+from backend.database.crud import list_chunks, list_documents, list_ingestion_runs
 from backend.database.db import init_db
 
 router = APIRouter(tags=["analytics"])
@@ -44,12 +45,30 @@ class SourceCorpusAnalytics(BaseModel):
     latest_document_created_at: str | None
 
 
+class IngestionRunAnalytics(BaseModel):
+    id: int
+    source_key: str
+    days: int
+    limit: int
+    status: str
+    fetched_documents: int
+    stored: int
+    duplicates: int
+    chunks_created: int
+    chunks_indexed: int
+    source_failures: list[str]
+    duration_ms: int | None
+    started_at: str
+    finished_at: str | None
+
+
 class CorpusAnalyticsResponse(BaseModel):
     total_documents: int
     total_chunks: int
     document_length_stats: LengthStats
     chunk_length_stats: LengthStats
     sources: list[SourceCorpusAnalytics]
+    recent_ingestion_runs: list[IngestionRunAnalytics]
 
 
 def build_length_stats(texts: list[str]) -> LengthStats:
@@ -115,6 +134,32 @@ def corpus_analytics() -> CorpusAnalyticsResponse:
         )
 
     source_rows.sort(key=lambda row: row.document_count, reverse=True)
+    ingestion_runs = []
+
+    for run in list_ingestion_runs(limit=10):
+        try:
+            source_failures = json.loads(run.source_failures)
+        except json.JSONDecodeError:
+            source_failures = []
+
+        ingestion_runs.append(
+            IngestionRunAnalytics(
+                id=run.id,
+                source_key=run.source_key,
+                days=run.days,
+                limit=run.limit,
+                status=run.status,
+                fetched_documents=run.fetched_documents,
+                stored=run.stored,
+                duplicates=run.duplicates,
+                chunks_created=run.chunks_created,
+                chunks_indexed=run.chunks_indexed,
+                source_failures=source_failures,
+                duration_ms=run.duration_ms,
+                started_at=run.started_at.isoformat(),
+                finished_at=run.finished_at.isoformat() if run.finished_at else None,
+            )
+        )
 
     return CorpusAnalyticsResponse(
         total_documents=len(documents),
@@ -122,4 +167,5 @@ def corpus_analytics() -> CorpusAnalyticsResponse:
         document_length_stats=build_length_stats([document.text or "" for document in documents]),
         chunk_length_stats=build_length_stats([chunk.text or "" for chunk in chunks]),
         sources=source_rows,
+        recent_ingestion_runs=ingestion_runs,
     )

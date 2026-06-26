@@ -273,6 +273,7 @@ def test_corpus_analytics_returns_source_and_length_stats() -> None:
         patch("backend.api.analytics.init_db"),
         patch("backend.api.analytics.list_documents", return_value=[document]),
         patch("backend.api.analytics.list_chunks", return_value=[chunk]),
+        patch("backend.api.analytics.list_ingestion_runs", return_value=[]),
     ):
         response = client.get("/analytics/corpus")
 
@@ -284,3 +285,4 @@ def test_corpus_analytics_returns_source_and_length_stats() -> None:
     assert payload["sources"][0]["source_name"] == "SEC"
     assert payload["sources"][0]["document_count"] == 1
     assert payload["sources"][0]["chunk_count"] == 1
+    assert payload["recent_ingestion_runs"] == []
