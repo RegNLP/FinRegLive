@@ -13,10 +13,12 @@
 # Output:
 #   Stored SQLModel objects returned from the SQLite database.
 
+import json
+
 from sqlmodel import Session, select
 
 from backend.database.db import engine
-from backend.database.models import Chunk, Document
+from backend.database.models import Chunk, Document, QueryLog
 
 
 def get_document_by_hash(content_hash: str) -> Document | None:
@@ -99,3 +101,35 @@ def create_chunk(document_id: int, chunk_index: int, text: str) -> Chunk:
         session.commit()
         session.refresh(chunk)
         return chunk
+
+
+def create_query_log(
+    query_text: str,
+    retrieval_method: str,
+    answer_mode: str,
+    top_k: int,
+    retrieved_chunk_ids: list[str],
+    source_count: int,
+    latency_ms: int | None = None,
+) -> QueryLog:
+    query_log = QueryLog(
+        query_text=query_text,
+        retrieval_method=retrieval_method,
+        answer_mode=answer_mode,
+        top_k=top_k,
+        retrieved_chunk_ids=json.dumps(retrieved_chunk_ids),
+        source_count=source_count,
+        latency_ms=latency_ms,
+    )
+
+    with Session(engine) as session:
+        session.add(query_log)
+        session.commit()
+        session.refresh(query_log)
+        return query_log
+
+
+def list_query_logs() -> list[QueryLog]:
+    with Session(engine) as session:
+        statement = select(QueryLog).order_by(QueryLog.created_at.desc())
+        return list(session.exec(statement))

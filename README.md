@@ -208,6 +208,7 @@ Completed:
 - Phase 8: local source-grounded answer generation
 - Phase 8b: optional OpenAI source-grounded answer generation
 - Phase 9A: FastAPI `/query` endpoint for local and OpenAI answer generation
+- Phase 9B: query logging for `/query` requests
 
 Current working flow:
 
@@ -226,6 +227,7 @@ SEC RSS / FCA HTML
   -> source-grounded answer with citations
   -> optional OpenAI answer generation
   -> FastAPI /query endpoint
+  -> SQLite query log
 ```
 
 Not built yet:

@@ -50,8 +50,35 @@ def _add_missing_document_text_column() -> None:
         connection.execute(text("ALTER TABLE document ADD COLUMN text TEXT DEFAULT ''"))
 
 
+def _add_missing_querylog_columns() -> None:
+    inspector = inspect(engine)
+
+    if "querylog" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("querylog")}
+    statements = []
+
+    if "answer_mode" not in columns:
+        statements.append("ALTER TABLE querylog ADD COLUMN answer_mode TEXT DEFAULT 'local'")
+    if "top_k" not in columns:
+        statements.append("ALTER TABLE querylog ADD COLUMN top_k INTEGER DEFAULT 5")
+    if "retrieved_chunk_ids" not in columns:
+        statements.append("ALTER TABLE querylog ADD COLUMN retrieved_chunk_ids TEXT DEFAULT '[]'")
+    if "source_count" not in columns:
+        statements.append("ALTER TABLE querylog ADD COLUMN source_count INTEGER DEFAULT 0")
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
+
+
 def init_db() -> None:
     import backend.database.models  # noqa: F401
 
     SQLModel.metadata.create_all(engine)
     _add_missing_document_text_column()
+    _add_missing_querylog_columns()

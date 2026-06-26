@@ -46,6 +46,10 @@ class QueryLog(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     query_text: str
     retrieval_method: str
+    answer_mode: str = "local"
+    top_k: int = 5
+    retrieved_chunk_ids: str = "[]"
+    source_count: int = 0
     latency_ms: int | None = None
     created_at: datetime = Field(default_factory=utc_now)
 

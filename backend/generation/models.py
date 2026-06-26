@@ -24,6 +24,7 @@ class AnswerSource(BaseModel):
 
 
 class GroundedAnswer(BaseModel):
+    query_id: int | None = None
     question: str
     answer: str
     sources: list[AnswerSource]

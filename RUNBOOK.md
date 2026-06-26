@@ -838,6 +838,64 @@ curl -X POST http://127.0.0.1:8000/query \
   }'
 ```
 
+The response includes:
+
+```text
+query_id
+question
+answer
+sources
+limitations
+```
+
+`query_id` is useful for later feedback. It lets the app connect feedback to the exact question and answer.
+
+## Step 9B: Query Logging
+
+Step 9B stores every successful `/query` call in SQLite.
+
+Why this exists:
+
+- we need to know what users asked
+- we need to know whether the answer used local generation or OpenAI
+- we need to know which chunks were retrieved
+- feedback will later connect to a saved query log
+
+Stored fields:
+
+```text
+query_text
+retrieval_method
+answer_mode
+top_k
+retrieved_chunk_ids
+source_count
+latency_ms
+created_at
+```
+
+Check recent query logs:
+
+```bash
+python - <<'PY'
+from backend.database.crud import list_query_logs
+from backend.database.db import init_db
+
+init_db()
+
+for log in list_query_logs()[:5]:
+    print("id:", log.id)
+    print("query:", log.query_text)
+    print("retrieval:", log.retrieval_method)
+    print("answer_mode:", log.answer_mode)
+    print("top_k:", log.top_k)
+    print("chunk_ids:", log.retrieved_chunk_ids)
+    print("source_count:", log.source_count)
+    print("latency_ms:", log.latency_ms)
+    print("---")
+PY
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
