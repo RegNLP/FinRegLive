@@ -201,6 +201,7 @@ Completed:
 - Phase 6A: local OpenSearch service with Docker Compose
 - Phase 6B: OpenSearch Python client
 - Phase 6C: OpenSearch index schema
+- Phase 6D: local embedding generation
 
 Current working flow:
 
@@ -217,7 +218,6 @@ SEC RSS / FCA HTML
 Not built yet:
 
 - OpenSearch indexing
-- embeddings
 - retrieval
 - LLM answer generation
 - Streamlit frontend

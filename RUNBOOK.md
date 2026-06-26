@@ -625,6 +625,35 @@ Check the mapping:
 curl http://localhost:9200/finreg_chunks/_mapping
 ```
 
+### Step 6D: Generate Embeddings
+
+Install updated dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Generate one embedding:
+
+```bash
+python - <<'PY'
+from backend.indexing.embeddings import embed_text
+
+vector = embed_text("Financial crime compliance and AML controls")
+
+print("dimension:", len(vector))
+print("first_values:", vector[:5])
+PY
+```
+
+Expected result:
+
+```text
+dimension: 384
+```
+
+The first run may take longer because the embedding model is downloaded.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

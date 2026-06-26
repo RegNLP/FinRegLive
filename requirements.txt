@@ -4,5 +4,6 @@ feedparser
 opensearch-py
 PyYAML
 requests
+sentence-transformers
 sqlmodel
 uvicorn[standard]
