@@ -121,6 +121,7 @@ It contains non-secret local settings such as:
 ```text
 OPENAI_API_KEY=
 FINREG_CONFIG_PATH=configs/local.yaml
+FINREG_USER_AGENT=FinRegLive/0.1 contact=your_email@example.com
 ```
 
 `.env.example` is safe to commit because it does not contain real secret values.
@@ -1433,18 +1434,54 @@ docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
   python -m backend.ingestion.recent --days 7 --source all --limit 50 --recreate-index
 ```
 
-Ingest only SEC RSS:
+Available source keys:
+
+```text
+sec_press        -> https://www.sec.gov/news/pressreleases.rss
+sec_edgar        -> https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&count=100&output=atom
+fca_news         -> https://www.fca.org.uk/news
+fca_publications -> https://www.fca.org.uk/publications
+gdelt_news       -> https://api.gdeltproject.org/api/v2/doc/doc
+```
+
+Source notes:
+
+- SEC automated requests should include `FINREG_USER_AGENT` with contact information.
+- GDELT may return `429 Too Many Requests`; the ingestion command records that as a source failure and continues.
+
+Ingest only SEC press releases:
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
-  python -m backend.ingestion.recent --days 7 --source sec --limit 50 --recreate-index
+  python -m backend.ingestion.recent --days 7 --source sec_press --limit 50 --recreate-index
+```
+
+Ingest only SEC EDGAR current filings:
+
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
+  python -m backend.ingestion.recent --days 7 --source sec_edgar --limit 50 --recreate-index
 ```
 
 Ingest only the FCA HTML news page snapshot:
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
-  python -m backend.ingestion.recent --days 7 --source fca --recreate-index
+  python -m backend.ingestion.recent --days 7 --source fca_news --recreate-index
+```
+
+Ingest only the FCA publications page snapshot:
+
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
+  python -m backend.ingestion.recent --days 7 --source fca_publications --recreate-index
+```
+
+Ingest only GDELT news:
+
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
+  python -m backend.ingestion.recent --days 7 --source gdelt_news --limit 25 --recreate-index
 ```
 
 Test a Docker API query:

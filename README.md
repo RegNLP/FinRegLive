@@ -217,12 +217,12 @@ Completed:
 - Phase 11C: document and recent update API endpoints
 - Phase 11D: Streamlit UI polish with recent updates and document inspection
 - Phase 12: Docker Compose setup for OpenSearch, backend, and frontend
-- Recent ingestion command for last-week RSS updates and HTML source snapshots
+- Recent ingestion command for SEC, FCA, and GDELT sources
 
 Current working flow:
 
 ```text
-SEC RSS / FCA HTML
+SEC RSS / SEC EDGAR / FCA HTML / GDELT news
   -> recent ingestion command
   -> IngestedDocument
   -> content hash

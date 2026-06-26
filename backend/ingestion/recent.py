@@ -22,6 +22,7 @@ from email.utils import parsedate_to_datetime
 from pydantic import BaseModel
 
 from backend.indexing.index_chunks import IndexChunksResult, index_chunks
+from backend.ingestion.gdelt import fetch_gdelt_news
 from backend.ingestion.html import fetch_html
 from backend.ingestion.models import IngestedDocument
 from backend.ingestion.rss import fetch_rss
@@ -38,18 +39,41 @@ class SourceDefinition:
 
 
 SOURCES = {
-    "sec": SourceDefinition(
-        key="sec",
+    "sec_press": SourceDefinition(
+        key="sec_press",
         source_name="SEC",
         source_url="https://www.sec.gov/news/pressreleases.rss",
         source_type="rss",
     ),
-    "fca": SourceDefinition(
-        key="fca",
+    "sec_edgar": SourceDefinition(
+        key="sec_edgar",
+        source_name="SEC EDGAR",
+        source_url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&count=100&output=atom",
+        source_type="rss",
+    ),
+    "fca_news": SourceDefinition(
+        key="fca_news",
         source_name="FCA",
         source_url="https://www.fca.org.uk/news",
         source_type="html",
     ),
+    "fca_publications": SourceDefinition(
+        key="fca_publications",
+        source_name="FCA Publications",
+        source_url="https://www.fca.org.uk/publications",
+        source_type="html",
+    ),
+    "gdelt_news": SourceDefinition(
+        key="gdelt_news",
+        source_name="GDELT",
+        source_url="https://api.gdeltproject.org/api/v2/doc/doc",
+        source_type="gdelt",
+    ),
+}
+
+SOURCE_ALIASES = {
+    "sec": "sec_press",
+    "fca": "fca_news",
 }
 
 
@@ -64,6 +88,7 @@ class RecentIngestionResult(BaseModel):
     chunks_created: int
     chunks_indexed: int
     html_snapshots: int
+    source_failures: list[str]
 
 
 def parse_publication_datetime(value: str | None) -> datetime | None:
@@ -117,6 +142,14 @@ def fetch_recent_source(
         document = fetch_html(source_name=source.source_name, source_url=source.source_url)
         return [document], 1
 
+    if source.source_type == "gdelt":
+        documents = fetch_gdelt_news(
+            source_name=source.source_name,
+            days=days,
+            limit=limit,
+        )
+        return documents, 0
+
     raise ValueError(f"Unsupported source type: {source.source_type}")
 
 
@@ -124,9 +157,10 @@ def select_sources(source_key: str) -> list[SourceDefinition]:
     if source_key == "all":
         return list(SOURCES.values())
 
-    source = SOURCES.get(source_key)
+    resolved_source_key = SOURCE_ALIASES.get(source_key, source_key)
+    source = SOURCES.get(resolved_source_key)
     if source is None:
-        valid_sources = ", ".join(["all", *SOURCES])
+        valid_sources = ", ".join(["all", *SOURCES, *SOURCE_ALIASES])
         raise ValueError(f"Unknown source '{source_key}'. Use one of: {valid_sources}")
 
     return [source]
@@ -143,13 +177,19 @@ def ingest_recent_sources(
 
     documents: list[IngestedDocument] = []
     html_snapshots = 0
+    source_failures = []
 
     for source in selected_sources:
-        source_documents, source_html_snapshots = fetch_recent_source(
-            source=source,
-            days=days,
-            limit=limit,
-        )
+        try:
+            source_documents, source_html_snapshots = fetch_recent_source(
+                source=source,
+                days=days,
+                limit=limit,
+            )
+        except Exception as exc:
+            source_failures.append(f"{source.key}: {exc}")
+            continue
+
         documents.extend(source_documents)
         html_snapshots += source_html_snapshots
 
@@ -171,6 +211,7 @@ def ingest_recent_sources(
         chunks_created=chunk_result.chunks_created,
         chunks_indexed=index_result.chunks_indexed,
         html_snapshots=html_snapshots,
+        source_failures=source_failures,
     )
 
 
@@ -184,6 +225,10 @@ def print_result(result: RecentIngestionResult) -> None:
     print("chunks_created:", result.chunks_created)
     print("chunks_indexed:", result.chunks_indexed)
     print("html_snapshots:", result.html_snapshots)
+    if result.source_failures:
+        print("source_failures:")
+        for failure in result.source_failures:
+            print(f"- {failure}")
 
 
 def main() -> None:
@@ -191,7 +236,7 @@ def main() -> None:
     parser.add_argument("--days", type=int, default=7, help="RSS lookback window in days.")
     parser.add_argument(
         "--source",
-        choices=["all", *SOURCES.keys()],
+        choices=["all", *SOURCES.keys(), *SOURCE_ALIASES.keys()],
         default="all",
         help="Source to ingest.",
     )

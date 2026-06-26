@@ -14,20 +14,31 @@
 # Output:
 #   A list of IngestedDocument objects.
 
+import os
+
 import feedparser
 
 from backend.ingestion.models import IngestedDocument
 
 
+def request_headers() -> dict[str, str]:
+    return {
+        "User-Agent": os.getenv(
+            "FINREG_USER_AGENT",
+            "FinRegLive/0.1 educational-prototype contact=example@example.com",
+        )
+    }
+
+
 def fetch_rss(source_name: str, source_url: str, limit: int = 5) -> list[IngestedDocument]:
-    feed = feedparser.parse(source_url)
+    feed = feedparser.parse(source_url, request_headers=request_headers())
     documents: list[IngestedDocument] = []
 
     for entry in feed.entries[:limit]:
         title = " ".join(getattr(entry, "title", "Untitled").split())
         link = getattr(entry, "link", source_url)
         summary = " ".join(getattr(entry, "summary", "").split())
-        publication_date = getattr(entry, "published", None)
+        publication_date = getattr(entry, "published", None) or getattr(entry, "updated", None)
         text = f"{title}\n\n{summary}".strip()
 
         if not text:
