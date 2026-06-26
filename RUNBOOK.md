@@ -1524,6 +1524,20 @@ curl -X POST http://127.0.0.1:8000/retrieval/diagnostics \
   -d '{"question":"What recent FCA updates mention listing rules or investment funds?","top_k":5}'
 ```
 
+Run a small basic evaluation smoke test:
+
+```bash
+python -m evaluation.run_basic --limit 3 --top-k 3
+```
+
+Run the full basic evaluation question set:
+
+```bash
+python -m evaluation.run_basic --top-k 5
+```
+
+Evaluation outputs are written under `evaluation/results/`.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

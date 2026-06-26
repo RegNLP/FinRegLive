@@ -224,6 +224,7 @@ Completed:
 - Phase 14C: ingestion run tracking with recent run history
 - Phase 15: retrieval diagnostics API and Streamlit Retrieval tab
 - Phase 16: local lexical reranking for hybrid retrieval candidates
+- Phase 17A: basic local evaluation runner
 
 Current working flow:
 
@@ -256,12 +257,12 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> ingestion run history
   -> retrieval diagnostics
   -> optional reranking before answer generation
+  -> basic local evaluation
   -> Docker Compose local stack
 ```
 
 Not built yet:
 
-- evaluation layer 1: basic local evaluation
 - evaluation layer 2: LLM-as-a-judge
 - evaluation layer 3: RAGAS experiment
 - evaluation layer 4: DeepEval experiment
