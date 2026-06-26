@@ -1422,7 +1422,7 @@ docker compose -f infra/docker-compose.yml exec backend python -m backend.indexi
 Prepare a small Docker demo dataset:
 
 ```bash
-docker compose -f infra/docker-compose.yml exec backend python - <<'PY'
+docker compose -f infra/docker-compose.yml exec -T backend python - <<'PY'
 from backend.ingestion.rss import fetch_rss
 from backend.ingestion.store import store_ingested_documents
 from backend.processing.build_chunks import build_chunks_for_stored_documents
