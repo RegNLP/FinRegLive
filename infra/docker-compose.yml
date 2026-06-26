@@ -1,0 +1,17 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.13.0
+    container_name: finreg-opensearch
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "FinRegLive1!"
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+volumes:
+  opensearch-data:

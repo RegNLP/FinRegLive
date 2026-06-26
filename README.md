@@ -198,6 +198,7 @@ Completed:
 - Phase 4: RSS/HTML ingestion and text deduplication
 - Phase 4b: storing ingested documents and skipping duplicates
 - Phase 5: word-based chunking and chunk storage
+- Phase 6A: local OpenSearch service with Docker Compose
 
 Current working flow:
 
@@ -214,6 +215,9 @@ SEC RSS / FCA HTML
 Not built yet:
 
 - OpenSearch indexing
+- OpenSearch Python client
+- OpenSearch index schema
+- embeddings
 - retrieval
 - LLM answer generation
 - Streamlit frontend
@@ -467,9 +471,6 @@ Current chunking strategy:
 
 ### Phase 6: Search Indexing
 
-- Create OpenSearch index schema
-- Index chunks into OpenSearch
-
 Goal:
 
 - Move from database storage to searchable evidence
@@ -481,17 +482,135 @@ Deliverables:
 - `backend/indexing/`
 - OpenSearch client
 - index schema
+- embedding helper
 - indexing function
+- Docker Compose file for local OpenSearch
 
 Tools:
 
 - OpenSearch
 - Docker
+- opensearch-py
+- sentence-transformers
 
 Checkpoint:
 
 - OpenSearch runs locally
 - Chunks can be indexed and searched
+
+Phase 6 will be split into smaller steps:
+
+#### Phase 6A: Local OpenSearch Service
+
+Goal:
+
+- Run OpenSearch locally as a separate search service
+
+Deliverables:
+
+- `infra/docker-compose.yml`
+
+Checkpoint:
+
+- `curl http://localhost:9200` returns an OpenSearch response
+
+Note:
+
+- This requires Docker Desktop. Until Docker Desktop is installed and running, this phase can be planned but not executed locally.
+
+#### Phase 6B: OpenSearch Python Client
+
+Goal:
+
+- Let backend code connect to OpenSearch
+
+Deliverables:
+
+- `backend/search/__init__.py`
+- `backend/search/client.py`
+
+Checkpoint:
+
+- Python can ping OpenSearch successfully
+
+#### Phase 6C: Index Schema
+
+Goal:
+
+- Define how chunk records are stored in OpenSearch
+
+Deliverables:
+
+- `backend/indexing/__init__.py`
+- `backend/indexing/schema.py`
+
+Fields:
+
+- `chunk_id`
+- `document_id`
+- `chunk_index`
+- `chunk_text`
+- `title`
+- `source_name`
+- `source_url`
+- `publication_date`
+- `embedding`
+
+Checkpoint:
+
+- The `finreg_chunks` index can be created
+
+#### Phase 6D: Embeddings
+
+Goal:
+
+- Generate vector embeddings for chunk text
+
+Deliverables:
+
+- `backend/indexing/embeddings.py`
+
+Initial model:
+
+- `BAAI/bge-small-en-v1.5`
+
+Embedding dimension:
+
+- `384`
+
+Checkpoint:
+
+- A chunk text can be converted into a 384-dimensional vector
+
+#### Phase 6E: Index Chunks
+
+Goal:
+
+- Read chunks from SQLite and send them to OpenSearch
+
+Deliverables:
+
+- `backend/indexing/index_chunks.py`
+
+Checkpoint:
+
+- Stored chunks are indexed into OpenSearch with metadata and embeddings
+
+#### Phase 6F: Manual Search Checks
+
+Goal:
+
+- Confirm OpenSearch can retrieve indexed chunks
+
+Checks:
+
+- BM25 text search
+- vector search
+- later hybrid search
+
+Checkpoint:
+
+- A manual search returns relevant indexed chunks
 
 ### Phase 7: Retrieval
 

@@ -491,6 +491,74 @@ chunks_created: 0
 
 This proves the system chunks each stored document only once.
 
+## Step 6: Search Indexing
+
+Step 6 will add OpenSearch indexing.
+
+This step requires Docker Desktop because OpenSearch will run as a local container.
+
+### Docker Desktop Requirement
+
+Before running OpenSearch locally, install and start Docker Desktop.
+
+Check whether Docker is available:
+
+```bash
+docker --version
+docker compose version
+```
+
+If Docker Desktop is not installed or not running, these commands will fail.
+
+Phase 6 will be implemented in smaller parts:
+
+```text
+6A: Run OpenSearch locally
+6B: Add OpenSearch Python client
+6C: Create OpenSearch index schema
+6D: Generate embeddings
+6E: Index chunks into OpenSearch
+6F: Run manual BM25/vector search checks
+```
+
+### Step 6A: Start OpenSearch
+
+Start OpenSearch:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+```
+
+Check containers:
+
+```bash
+docker compose -f infra/docker-compose.yml ps
+```
+
+Check OpenSearch:
+
+```bash
+curl http://localhost:9200
+```
+
+Expected result:
+
+```text
+An OpenSearch JSON response with cluster information.
+```
+
+Stop OpenSearch:
+
+```bash
+docker compose -f infra/docker-compose.yml down
+```
+
+Stop OpenSearch and delete the local OpenSearch volume:
+
+```bash
+docker compose -f infra/docker-compose.yml down -v
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
