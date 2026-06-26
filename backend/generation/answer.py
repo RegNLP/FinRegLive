@@ -15,6 +15,7 @@
 
 import argparse
 
+from backend.generation.confidence import EvidenceAssessment, assess_evidence
 from backend.generation.llm_client import generate_openai_answer
 from backend.generation.models import AnswerSource, GroundedAnswer
 from backend.reranking.lexical import rerank_lexical
@@ -61,6 +62,36 @@ def build_local_answer(question: str, evidence: list[RetrievalResult]) -> Ground
     )
 
 
+def build_sources(evidence: list[RetrievalResult]) -> list[AnswerSource]:
+    return [
+        AnswerSource(
+            chunk_id=item.chunk_id,
+            title=item.title,
+            source_name=item.source_name,
+            source_url=item.source_url,
+        )
+        for item in evidence
+    ]
+
+
+def build_abstention_answer(
+    question: str,
+    evidence: list[RetrievalResult],
+    assessment: EvidenceAssessment,
+) -> GroundedAnswer:
+    return GroundedAnswer(
+        question=question,
+        answer="The retrieved evidence is insufficient to answer this question.",
+        sources=build_sources(evidence),
+        limitations=[
+            assessment.reason,
+            f"Maximum question/evidence overlap: {assessment.max_overlap_ratio:.2f}.",
+            "This answer is generated only from retrieved evidence.",
+            "This is not legal, financial, or investment advice.",
+        ],
+    )
+
+
 def retrieve_answer_evidence(
     question: str,
     top_k: int = 5,
@@ -84,6 +115,10 @@ def answer_question(
         top_k=top_k,
         use_reranking=use_reranking,
     )
+    assessment = assess_evidence(question, evidence)
+    if not assessment.can_answer:
+        return build_abstention_answer(question, evidence, assessment)
+
     return build_local_answer(question, evidence)
 
 
@@ -98,8 +133,9 @@ def answer_question_with_llm(
         use_reranking=use_reranking,
     )
 
-    if not evidence:
-        return build_local_answer(question, evidence)
+    assessment = assess_evidence(question, evidence)
+    if not assessment.can_answer:
+        return build_abstention_answer(question, evidence, assessment)
 
     answer_text = generate_openai_answer(question, evidence)
     fallback_answer = build_local_answer(question, evidence)

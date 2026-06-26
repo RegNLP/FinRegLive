@@ -84,8 +84,14 @@ def source_ids(answer: GroundedAnswer) -> list[str]:
 
 
 def answer_abstained(answer: GroundedAnswer) -> bool:
-    combined_text = " ".join([answer.answer, *answer.limitations]).lower()
-    return any(marker in combined_text for marker in ABSTENTION_MARKERS)
+    answer_text = answer.answer.strip().lower()
+    if answer_text.startswith("the retrieved evidence is insufficient"):
+        return True
+    if answer_text.startswith("i cannot answer") or answer_text.startswith("i can't answer"):
+        return True
+
+    limitation_text = " ".join(answer.limitations[:2]).lower()
+    return any(marker in limitation_text for marker in ABSTENTION_MARKERS)
 
 
 def answer_metrics(answer: GroundedAnswer, latency_ms: int) -> dict[str, Any]:

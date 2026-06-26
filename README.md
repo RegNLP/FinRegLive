@@ -225,6 +225,7 @@ Completed:
 - Phase 15: retrieval diagnostics API and Streamlit Retrieval tab
 - Phase 16: local lexical reranking for hybrid retrieval candidates
 - Phase 17A: basic local evaluation runner
+- Phase 17A fix: confidence and abstention gate
 
 Current working flow:
 
@@ -257,6 +258,7 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> ingestion run history
   -> retrieval diagnostics
   -> optional reranking before answer generation
+  -> confidence and abstention gate
   -> basic local evaluation
   -> Docker Compose local stack
 ```

@@ -18,6 +18,7 @@ from pathlib import Path
 from backend.generation.models import AnswerSource, GroundedAnswer
 from evaluation.run_basic import (
     EvaluationQuestion,
+    answer_abstained,
     compare_runs,
     evaluate_question,
     load_questions,
@@ -122,6 +123,17 @@ def test_summarize_results_counts_basic_metrics() -> None:
     assert summary["hybrid_with_sources"] == 1
     assert summary["reranked_with_sources"] == 1
     assert summary["changed_source_sets"] == 1
+
+
+def test_answer_abstained_does_not_scan_retrieved_snippet_text() -> None:
+    answer = GroundedAnswer(
+        question="What changed?",
+        answer="Based on the retrieved evidence, this source does not contain unrelated details.",
+        sources=[],
+        limitations=["This answer is generated only from retrieved evidence."],
+    )
+
+    assert answer_abstained(answer) is False
 
 
 def test_write_jsonl_creates_result_file(tmp_path: Path) -> None:
