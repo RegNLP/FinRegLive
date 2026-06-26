@@ -218,6 +218,7 @@ Completed:
 - Phase 11D: Streamlit UI polish with recent updates and document inspection
 - Phase 12: Docker Compose setup for OpenSearch, backend, and frontend
 - Recent ingestion command for SEC, FCA, and Bank of England sources
+- Evaluation question set in `evaluation/questions.jsonl`
 
 Current working flow:
 
@@ -250,6 +251,10 @@ SEC RSS / SEC EDGAR / FCA HTML / Bank of England RSS
 
 Not built yet:
 
+- FCA item-level ingestion
+- corpus and ingestion analytics
+- retrieval diagnostics
+- evaluation runners
 - scheduled ingestion
 - cloud deployment
 
@@ -786,69 +791,119 @@ Checkpoint:
 
 - One command starts the local application stack
 
-### Phase 13: Cloud-Ready Design
-
-- Document AWS service mapping
-- Document secrets, logging, and scheduled ingestion strategy
+### Phase 13: FCA Item-Level Ingestion
 
 Goal:
 
-- Show how local components map to AWS services
-- Prepare the codebase for future cloud deployment
+- Replace FCA listing-page snapshots with individual FCA article/publication documents
+- Increase corpus quality before increasing corpus size
 
 Deliverables:
 
-- `docs/cloud_mapping.md`
-- AWS architecture notes
-- secrets strategy
-- logging strategy
+- FCA listing parser
+- FCA item URL extraction
+- item-level HTML fetching
+- deduplication using existing content hashes
+- smoke test showing FCA item documents, chunks, and indexed chunks
+
+Checkpoint:
+
+- FCA queries retrieve individual FCA pages instead of broad listing-page snapshots
+
+### Phase 14: Corpus and Ingestion Analytics
+
+Goal:
+
+- Make the data pipeline observable
+- Show source coverage and ingestion health
+
+Deliverables:
+
+- source-level document counts
+- chunk counts by source
+- duplicate counts
+- latest ingestion time
+- failed ingestion attempts
+- diagnostics/API or UI view for corpus health
+
+Checkpoint:
+
+- We can quickly answer what data exists, when it was ingested, and which sources failed
+
+### Phase 15: Retrieval Diagnostics and Optional Reranking
+
+Goal:
+
+- Make retrieval behavior visible and comparable
+
+Deliverables:
+
+- BM25 vs vector vs hybrid comparison for the same query
+- retrieved chunk score display
+- optional cross-encoder reranking experiment
+
+Checkpoint:
+
+- We can explain why a query retrieved specific evidence
+
+### Phase 16: Evaluation Layer
+
+Goal:
+
+- Evaluate answer quality instead of only manually testing the app
+
+Deliverables:
+
+- `evaluation/questions.jsonl`
+- lightweight LLM-as-judge runner
+- metrics for faithfulness, answer relevance, source support, regulatory caution, limitation awareness, and abstention quality
+- optional RAGAS and DeepEval experiments
+
+Checkpoint:
+
+- A small evaluation run produces repeatable scores and failure examples
+
+### Phase 17: Cloud-Ready Architecture
+
+Goal:
+
+- Show how the local Docker system maps to production infrastructure
+
+Deliverables:
+
+- cloud architecture notes
+- FastAPI backend to container service mapping
+- Streamlit frontend to container app mapping
+- SQLite to PostgreSQL or managed relational database mapping
+- OpenSearch container to managed OpenSearch mapping
+- `.env` to secrets manager mapping
 - scheduled ingestion strategy
-
-Tools:
-
-- AWS S3
-- Amazon RDS
-- Amazon OpenSearch Service
-- ECS/Fargate
-- Secrets Manager
-- CloudWatch
-- EventBridge
+- logging and monitoring strategy
 
 Checkpoint:
 
-- Each local component has a clear AWS equivalent
+- Each local component has a clear production equivalent
 
-### Phase 13: Testing and Documentation
-
-- Add tests for ingestion
-- Add tests for deduplication
-- Add tests for chunking
-- Add tests for query response structure
-- Add tests for feedback storage
-- Improve README and architecture documentation
+### Phase 18: Final README and Presentation Rewrite
 
 Goal:
 
-- Make the system safer to change
-- Document decisions clearly
+- Present the project clearly for technical reviewers
 
 Deliverables:
 
-- `tests/`
-- pytest setup
-- focused unit and API tests
-- architecture documentation
-- limitations documentation
-
-Tools:
-
-- pytest
-- FastAPI TestClient
+- problem statement
+- architecture diagram or description
+- ingestion pipeline explanation
+- retrieval and generation explanation
+- evaluation summary
+- cloud-ready design summary
+- screenshots
+- limitations and future work
 
 Checkpoint:
 
-- Tests pass locally
-- README explains how to run and understand the system
+- A reviewer can understand the system, run it, and see why each component exists
 
 ## Working Method
 
