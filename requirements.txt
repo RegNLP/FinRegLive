@@ -7,4 +7,5 @@ PyYAML
 requests
 sentence-transformers
 sqlmodel
+streamlit
 uvicorn[standard]

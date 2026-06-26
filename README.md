@@ -211,6 +211,7 @@ Completed:
 - Phase 9B: query logging for `/query` requests
 - Phase 9C: feedback API connected to saved query IDs
 - Phase 9D: diagnostics API for database and OpenSearch status
+- Phase 10: Streamlit frontend for query, sources, feedback, and diagnostics
 
 Current working flow:
 
@@ -232,11 +233,11 @@ SEC RSS / FCA HTML
   -> SQLite query log
   -> feedback storage
   -> diagnostics checks
+  -> Streamlit user interface
 ```
 
 Not built yet:
 
-- Streamlit frontend
 - full Docker setup for backend/frontend
 
 ### Phase 0: Project Understanding

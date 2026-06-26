@@ -1027,6 +1027,72 @@ Expected response shape:
 
 The exact counts may be different on your machine depending on how many test commands you have run.
 
+## Step 10: Streamlit Frontend
+
+Step 10 adds a browser UI for the existing FastAPI backend.
+
+Why this exists:
+
+- users should not need terminal commands to ask questions
+- answers, sources, limitations, and feedback should be visible in one place
+- diagnostics should be easy to check during development
+
+Files added or updated:
+
+```text
+frontend/__init__.py
+frontend/app.py
+requirements.txt
+```
+
+Install updated dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Start OpenSearch:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d
+```
+
+Start the backend:
+
+```bash
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+```
+
+Start the frontend in another terminal:
+
+```bash
+.venv/bin/python -m streamlit run frontend/app.py --server.port 8501
+```
+
+If port `8501` is already used by another Streamlit app, use another port:
+
+```bash
+.venv/bin/python -m streamlit run frontend/app.py --server.port 8502
+```
+
+Open the frontend:
+
+```text
+http://localhost:8501
+```
+
+The frontend calls this backend by default:
+
+```text
+http://127.0.0.1:8000
+```
+
+To point the frontend at a different backend URL:
+
+```bash
+FINREG_API_BASE_URL=http://127.0.0.1:8000 .venv/bin/python -m streamlit run frontend/app.py --server.port 8501
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
