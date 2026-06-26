@@ -19,6 +19,7 @@ from fastapi import FastAPI
 from backend.api.diagnostics import router as diagnostics_router
 from backend.api.documents import router as documents_router
 from backend.api.feedback import router as feedback_router
+from backend.api.ingestion import router as ingestion_router
 from backend.api.query import router as query_router
 from backend.config import get_settings
 from backend.database.db import init_db
@@ -48,3 +49,4 @@ app.include_router(query_router)
 app.include_router(feedback_router)
 app.include_router(diagnostics_router)
 app.include_router(documents_router)
+app.include_router(ingestion_router)

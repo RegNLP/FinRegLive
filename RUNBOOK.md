@@ -1434,6 +1434,16 @@ docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
   python -m backend.ingestion.recent --days 7 --source all --limit 50 --recreate-index
 ```
 
+Ingest recent source data through the API:
+
+```bash
+curl -X POST http://127.0.0.1:8000/ingest/recent \
+  -H 'Content-Type: application/json' \
+  -d '{"days":7,"source":"all","limit":20,"recreate_index":true}'
+```
+
+In the UI, open `Recent Updates` and use `Fetch New Data`.
+
 Available source keys:
 
 ```text

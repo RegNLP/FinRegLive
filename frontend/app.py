@@ -113,6 +113,49 @@ def render_document_summary(document: dict[str, Any]) -> None:
 def render_recent_updates_page() -> None:
     st.header("Recent Updates")
 
+    with st.expander("Fetch New Data", expanded=False):
+        source_options = {
+            "All active sources": "all",
+            "SEC press releases": "sec_press",
+            "SEC EDGAR filings": "sec_edgar",
+            "FCA news": "fca_news",
+            "FCA publications": "fca_publications",
+            "Bank of England news": "boe_news",
+            "Bank of England publications": "boe_publications",
+            "Bank of England PRA": "boe_prudential",
+        }
+        selected_source_label = st.selectbox("Source", options=list(source_options))
+        fetch_col_a, fetch_col_b = st.columns(2)
+        with fetch_col_a:
+            fetch_days = st.number_input("Days", min_value=1, max_value=90, value=7)
+        with fetch_col_b:
+            fetch_limit = st.number_input("Limit per source", min_value=1, max_value=100, value=20)
+
+        if st.button("Fetch newest documents"):
+            try:
+                result = api_post(
+                    "/ingest/recent",
+                    {
+                        "days": fetch_days,
+                        "source": source_options[selected_source_label],
+                        "limit": fetch_limit,
+                        "recreate_index": True,
+                    },
+                )
+            except requests.RequestException as exc:
+                st.error(f"Ingestion failed: {exc}")
+                return
+
+            st.success(
+                "Fetched "
+                f"{result['fetched_documents']} documents, stored {result['stored']}, "
+                f"duplicates {result['duplicates']}, indexed {result['chunks_indexed']} chunks."
+            )
+            if result["source_failures"]:
+                st.warning("Some sources failed.")
+                for failure in result["source_failures"]:
+                    st.write(f"- {failure}")
+
     limit = st.slider("Updates to show", min_value=1, max_value=50, value=10)
 
     try:

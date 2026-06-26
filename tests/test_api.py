@@ -227,3 +227,39 @@ def test_recent_updates_lists_document_summaries() -> None:
     payload = response.json()
     assert response.status_code == 200
     assert payload[0]["title"] == "Sample SEC Update"
+
+
+def test_recent_ingestion_endpoint_returns_summary() -> None:
+    with patch("backend.api.ingestion.ingest_recent_sources") as ingest_recent_sources:
+        ingest_recent_sources.return_value = {
+            "days": 7,
+            "source_keys": ["sec_press"],
+            "fetched_documents": 2,
+            "recent_documents": 2,
+            "stored": 1,
+            "duplicates": 1,
+            "documents_processed": 1,
+            "chunks_created": 3,
+            "chunks_indexed": 10,
+            "html_snapshots": 0,
+            "source_failures": [],
+        }
+
+        response = client.post(
+            "/ingest/recent",
+            json={"days": 7, "source": "sec_press", "limit": 2, "recreate_index": True},
+        )
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload["stored"] == 1
+    assert payload["chunks_indexed"] == 10
+
+
+def test_recent_ingestion_endpoint_rejects_unknown_source() -> None:
+    response = client.post(
+        "/ingest/recent",
+        json={"days": 7, "source": "unknown", "limit": 2, "recreate_index": True},
+    )
+
+    assert response.status_code == 422
