@@ -261,7 +261,10 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
 
 Not built yet:
 
-- evaluation runners
+- evaluation layer 1: basic local evaluation
+- evaluation layer 2: LLM-as-a-judge
+- evaluation layer 3: RAGAS experiment
+- evaluation layer 4: DeepEval experiment
 - scheduled ingestion
 - cloud deployment
 
@@ -878,16 +881,75 @@ Goal:
 
 - Evaluate answer quality instead of only manually testing the app
 
+The evaluation layer will be built in four maturity levels. Each level adds
+more judgment quality, but also more cost, dependency weight, or complexity.
+
+### Phase 17A: Evaluation Layer 1 - Basic Local Evaluation
+
+Goal:
+
+- Create a fast, repeatable evaluation baseline without using another LLM
+
 Deliverables:
 
 - `evaluation/questions.jsonl`
-- lightweight LLM-as-judge runner
-- metrics for faithfulness, answer relevance, source support, regulatory caution, limitation awareness, and abstention quality
-- optional RAGAS and DeepEval experiments
+- local evaluation runner
+- result files under `evaluation/results/`
+- hybrid vs hybrid-reranked comparison
+- basic metrics: source count, duplicate sources, empty answers, abstention detection, answer length, latency, and source overlap
 
 Checkpoint:
 
-- A small evaluation run produces repeatable scores and failure examples
+- We can run the same question set repeatedly and compare normal hybrid retrieval against reranked retrieval
+
+### Phase 17B: Evaluation Layer 2 - LLM-as-a-Judge
+
+Goal:
+
+- Use an LLM to score qualitative answer quality against retrieved evidence
+
+Deliverables:
+
+- judge prompt
+- OpenAI-based evaluation runner
+- scores for answer relevance, faithfulness, source support, regulatory caution, limitation awareness, and clarity
+- saved judge explanations for failure analysis
+
+Checkpoint:
+
+- Each evaluated answer receives structured judge scores and short explanations
+
+### Phase 17C: Evaluation Layer 3 - RAGAS
+
+Goal:
+
+- Experiment with a standard RAG evaluation framework
+
+Deliverables:
+
+- RAGAS evaluation script
+- metrics such as faithfulness, answer relevancy, context precision, and context recall where supported
+- comparison with the local and LLM-as-a-judge results
+
+Checkpoint:
+
+- RAGAS can run against the project question set and produce reusable metric output
+
+### Phase 17D: Evaluation Layer 4 - DeepEval
+
+Goal:
+
+- Add a second evaluation framework suitable for test-case style checks
+
+Deliverables:
+
+- DeepEval test cases
+- hallucination, answer relevance, contextual precision, and contextual recall checks where supported
+- custom regulatory QA criteria
+
+Checkpoint:
+
+- DeepEval can run repeatable RAG quality checks that could later be added to CI
 
 ### Phase 18: Cloud-Ready Architecture
 
