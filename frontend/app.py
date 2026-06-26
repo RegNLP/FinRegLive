@@ -93,6 +93,21 @@ def render_sources(sources: list[dict[str, Any]]) -> None:
             st.code(f"chunk_id: {source['chunk_id']}", language="text")
 
 
+def render_retrieval_results(title: str, results: list[dict[str, Any]]) -> None:
+    st.markdown(f"**{title}**")
+    if not results:
+        st.info("No results.")
+        return
+
+    for result in results:
+        label = f"{result['rank']}. {result['source_name']} | {result['title']}"
+        with st.expander(label):
+            st.metric("Score", round(result["score"], 6))
+            st.caption(result["source_url"])
+            st.code(f"chunk_id: {result['chunk_id']}", language="text")
+            st.write(result["chunk_text"])
+
+
 def render_document_summary(document: dict[str, Any]) -> None:
     title = document["title"]
     source_name = document["source_name"]
@@ -372,6 +387,51 @@ def render_analytics_page() -> None:
     )
 
 
+def render_retrieval_diagnostics_page() -> None:
+    st.header("Retrieval Diagnostics")
+
+    with st.form("retrieval_diagnostics_form"):
+        question = st.text_area(
+            "Question",
+            value="What recent FCA updates mention listing rules or investment funds?",
+            height=100,
+        )
+        top_k = st.slider("Results per method", min_value=1, max_value=20, value=5)
+        submitted = st.form_submit_button("Compare retrieval")
+
+    if submitted:
+        try:
+            st.session_state["retrieval_diagnostics"] = api_post(
+                "/retrieval/diagnostics",
+                {
+                    "question": question,
+                    "top_k": top_k,
+                },
+            )
+        except requests.RequestException as exc:
+            st.error(f"Retrieval diagnostics failed: {exc}")
+            return
+
+    diagnostics = st.session_state.get("retrieval_diagnostics")
+    if not diagnostics:
+        return
+
+    overlap = diagnostics["overlap"]
+    overlap_a, overlap_b, overlap_c, overlap_d = st.columns(4)
+    overlap_a.metric("BM25 & Vector", overlap["bm25_vector"])
+    overlap_b.metric("BM25 & Hybrid", overlap["bm25_hybrid"])
+    overlap_c.metric("Vector & Hybrid", overlap["vector_hybrid"])
+    overlap_d.metric("All methods", overlap["all_methods"])
+
+    bm25_col, vector_col, hybrid_col = st.columns(3)
+    with bm25_col:
+        render_retrieval_results("BM25", diagnostics["bm25"])
+    with vector_col:
+        render_retrieval_results("Vector", diagnostics["vector"])
+    with hybrid_col:
+        render_retrieval_results("Hybrid", diagnostics["hybrid"])
+
+
 def main() -> None:
     st.set_page_config(
         page_title="FinReg Live Intelligence",
@@ -382,13 +442,15 @@ def main() -> None:
     st.title("FinReg Live Intelligence")
     show_api_status()
 
-    ask_tab, recent_updates_tab, analytics_tab, diagnostics_tab = st.tabs(
-        ["Ask", "Recent Updates", "Analytics", "Diagnostics"]
+    ask_tab, recent_updates_tab, retrieval_tab, analytics_tab, diagnostics_tab = st.tabs(
+        ["Ask", "Recent Updates", "Retrieval", "Analytics", "Diagnostics"]
     )
     with ask_tab:
         render_ask_page()
     with recent_updates_tab:
         render_recent_updates_page()
+    with retrieval_tab:
+        render_retrieval_diagnostics_page()
     with analytics_tab:
         render_analytics_page()
     with diagnostics_tab:

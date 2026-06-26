@@ -1508,6 +1508,14 @@ curl -X POST http://127.0.0.1:8000/query \
   -d '{"question":"What did the SEC and CFTC publish about derivatives?","top_k":2,"use_llm":false}'
 ```
 
+Compare BM25, vector, and hybrid retrieval:
+
+```bash
+curl -X POST http://127.0.0.1:8000/retrieval/diagnostics \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What recent FCA updates mention listing rules or investment funds?","top_k":5}'
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

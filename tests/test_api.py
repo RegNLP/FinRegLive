@@ -25,6 +25,7 @@ from backend.database.models import Chunk, Document
 from backend.generation.llm_client import MissingOpenAIAPIKeyError
 from backend.generation.models import AnswerSource, GroundedAnswer
 from backend.main import app
+from backend.retrieval.models import RetrievalResult
 
 
 client = TestClient(app)
@@ -175,6 +176,21 @@ def sample_chunk() -> Chunk:
     )
 
 
+def sample_retrieval_result(chunk_id: str, method: str) -> RetrievalResult:
+    return RetrievalResult(
+        rank=1,
+        score=1.0,
+        retrieval_method=method,
+        chunk_id=chunk_id,
+        document_id=7,
+        chunk_index=0,
+        title="Sample SEC Update",
+        source_name="SEC",
+        source_url="https://example.com/sec",
+        chunk_text="Sample regulatory update text.",
+    )
+
+
 def test_documents_lists_document_summaries() -> None:
     with (
         patch("backend.api.documents.init_db"),
@@ -286,3 +302,40 @@ def test_corpus_analytics_returns_source_and_length_stats() -> None:
     assert payload["sources"][0]["document_count"] == 1
     assert payload["sources"][0]["chunk_count"] == 1
     assert payload["recent_ingestion_runs"] == []
+
+
+def test_retrieval_diagnostics_returns_method_results_and_overlap() -> None:
+    with (
+        patch(
+            "backend.api.retrieval_diagnostics.retrieve_bm25",
+            return_value=[sample_retrieval_result("1", "bm25")],
+        ),
+        patch(
+            "backend.api.retrieval_diagnostics.retrieve_vector",
+            return_value=[sample_retrieval_result("1", "vector")],
+        ),
+        patch(
+            "backend.api.retrieval_diagnostics.retrieve_hybrid",
+            return_value=[sample_retrieval_result("1", "hybrid")],
+        ),
+    ):
+        response = client.post(
+            "/retrieval/diagnostics",
+            json={"question": "What changed?", "top_k": 3},
+        )
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload["bm25"][0]["chunk_id"] == "1"
+    assert payload["vector"][0]["chunk_id"] == "1"
+    assert payload["hybrid"][0]["chunk_id"] == "1"
+    assert payload["overlap"]["all_methods"] == 1
+
+
+def test_retrieval_diagnostics_rejects_blank_question() -> None:
+    response = client.post(
+        "/retrieval/diagnostics",
+        json={"question": "  ", "top_k": 3},
+    )
+
+    assert response.status_code == 422
