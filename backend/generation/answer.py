@@ -15,6 +15,7 @@
 
 import argparse
 
+from backend.generation.llm_client import generate_openai_answer
 from backend.generation.models import AnswerSource, GroundedAnswer
 from backend.retrieval.hybrid import retrieve_hybrid
 from backend.retrieval.models import RetrievalResult
@@ -64,6 +65,26 @@ def answer_question(question: str, top_k: int = 5) -> GroundedAnswer:
     return build_local_answer(question, evidence)
 
 
+def answer_question_with_llm(question: str, top_k: int = 5) -> GroundedAnswer:
+    evidence = retrieve_hybrid(question, top_k=top_k)
+
+    if not evidence:
+        return build_local_answer(question, evidence)
+
+    answer_text = generate_openai_answer(question, evidence)
+    fallback_answer = build_local_answer(question, evidence)
+
+    return GroundedAnswer(
+        question=question,
+        answer=answer_text,
+        sources=fallback_answer.sources,
+        limitations=[
+            "This answer is generated only from retrieved evidence.",
+            "This is not legal, financial, or investment advice.",
+        ],
+    )
+
+
 def print_answer(answer: GroundedAnswer) -> None:
     print("\nQuestion:\n")
     print(answer.question)
@@ -85,9 +106,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a source-grounded answer.")
     parser.add_argument("question")
     parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument("--use-llm", action="store_true")
     args = parser.parse_args()
 
-    print_answer(answer_question(args.question, top_k=args.top_k))
+    if args.use_llm:
+        print_answer(answer_question_with_llm(args.question, top_k=args.top_k))
+    else:
+        print_answer(answer_question(args.question, top_k=args.top_k))
 
 
 if __name__ == "__main__":

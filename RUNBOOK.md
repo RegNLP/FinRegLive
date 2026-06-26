@@ -772,6 +772,29 @@ Limitations
 
 The current answer generator is a local grounded fallback. It uses retrieved evidence only and does not call an LLM yet.
 
+### Optional OpenAI Answer Generation
+
+Make sure `.env` contains:
+
+```text
+OPENAI_API_KEY=your_real_key
+FINREG_CONFIG_PATH=configs/local.yaml
+```
+
+Install updated dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Run with OpenAI:
+
+```bash
+python -m backend.generation.answer "What did the SEC and CFTC publish about derivatives?" --top-k 2 --use-llm
+```
+
+The retrieval still happens locally through OpenSearch. OpenAI only receives the question and retrieved evidence.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

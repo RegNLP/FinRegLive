@@ -206,6 +206,7 @@ Completed:
 - Phase 6F: manual BM25 and vector search checks
 - Phase 7: BM25, vector, and hybrid retrieval
 - Phase 8: local source-grounded answer generation
+- Phase 8b: optional OpenAI source-grounded answer generation
 
 Current working flow:
 
@@ -222,11 +223,11 @@ SEC RSS / FCA HTML
   -> BM25/vector search checks
   -> reusable retrieval functions
   -> source-grounded answer with citations
+  -> optional OpenAI answer generation
 ```
 
 Not built yet:
 
-- OpenAI/LLM answer generation
 - Streamlit frontend
 - full Docker setup for backend/frontend
 
