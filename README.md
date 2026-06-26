@@ -220,6 +220,8 @@ Completed:
 - Recent ingestion command for SEC, FCA, and Bank of England sources
 - Evaluation question set in `evaluation/questions.jsonl`
 - Phase 13: FCA item-level ingestion for news and publications
+- Phase 14A/14B: corpus analytics endpoint and Streamlit Analytics tab
+- Phase 14C: ingestion run tracking with recent run history
 
 Current working flow:
 
@@ -247,12 +249,14 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> automated tests
   -> document browsing endpoints
   -> recent updates UI
+  -> UI-triggered ingestion
+  -> corpus analytics
+  -> ingestion run history
   -> Docker Compose local stack
 ```
 
 Not built yet:
 
-- corpus and ingestion analytics
 - retrieval diagnostics
 - evaluation runners
 - scheduled ingestion
