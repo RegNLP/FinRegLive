@@ -1370,6 +1370,12 @@ Run in the background:
 docker compose -f infra/docker-compose.yml up --build -d
 ```
 
+Run in the background with `.env` loaded for OpenAI mode:
+
+```bash
+docker compose --env-file .env -f infra/docker-compose.yml up --build -d
+```
+
 Check running services:
 
 ```bash
@@ -1409,6 +1415,7 @@ Important notes:
 - `configs/docker.yaml` is for containers.
 - The Docker backend uses `http://opensearch:9200` because `opensearch` is the Compose service name.
 - The Docker backend uses deterministic hash embeddings to keep the container lightweight.
+- OpenAI mode needs `.env` loaded with `docker compose --env-file .env ...`.
 - The backend data volume is separate from your local `data/app.db`.
 - The Docker OpenSearch volume is separate from your existing local OpenSearch data.
 - After starting a fresh Docker stack, you may need to run ingestion, chunking, index creation, and indexing inside the backend container before query answers have evidence.
