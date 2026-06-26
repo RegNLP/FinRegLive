@@ -703,6 +703,45 @@ Vector results
 
 Both sections should return indexed SEC chunks.
 
+## Step 7: Retrieval
+
+Step 7 turns manual search checks into reusable retrieval functions.
+
+Files added:
+
+```text
+backend/retrieval/__init__.py
+backend/retrieval/models.py
+backend/retrieval/common.py
+backend/retrieval/bm25.py
+backend/retrieval/vector.py
+backend/retrieval/hybrid.py
+```
+
+### BM25 Retrieval
+
+```bash
+python -m backend.retrieval.bm25 "derivatives product definitions"
+```
+
+### Vector Retrieval
+
+```bash
+python -m backend.retrieval.vector "swap market reporting rules"
+```
+
+### Hybrid Retrieval
+
+```bash
+python -m backend.retrieval.hybrid "derivatives product definitions"
+```
+
+Expected result:
+
+```text
+Ranked evidence chunks with score, title, source, URL, and text preview.
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

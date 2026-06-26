@@ -204,6 +204,7 @@ Completed:
 - Phase 6D: local embedding generation
 - Phase 6E: indexing chunks into OpenSearch
 - Phase 6F: manual BM25 and vector search checks
+- Phase 7: BM25, vector, and hybrid retrieval
 
 Current working flow:
 
@@ -218,11 +219,11 @@ SEC RSS / FCA HTML
   -> local embeddings
   -> OpenSearch chunk index
   -> BM25/vector search checks
+  -> reusable retrieval functions
 ```
 
 Not built yet:
 
-- retrieval
 - LLM answer generation
 - Streamlit frontend
 - full Docker setup for backend/frontend
