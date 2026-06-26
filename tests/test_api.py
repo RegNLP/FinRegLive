@@ -263,3 +263,24 @@ def test_recent_ingestion_endpoint_rejects_unknown_source() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_corpus_analytics_returns_source_and_length_stats() -> None:
+    document = sample_document()
+    chunk = sample_chunk()
+
+    with (
+        patch("backend.api.analytics.init_db"),
+        patch("backend.api.analytics.list_documents", return_value=[document]),
+        patch("backend.api.analytics.list_chunks", return_value=[chunk]),
+    ):
+        response = client.get("/analytics/corpus")
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload["total_documents"] == 1
+    assert payload["total_chunks"] == 1
+    assert payload["document_length_stats"]["min_words"] == 4
+    assert payload["sources"][0]["source_name"] == "SEC"
+    assert payload["sources"][0]["document_count"] == 1
+    assert payload["sources"][0]["chunk_count"] == 1

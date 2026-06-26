@@ -1396,6 +1396,7 @@ Check backend:
 ```bash
 curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/diagnostics
+curl http://127.0.0.1:8000/analytics/corpus
 ```
 
 Stop services:

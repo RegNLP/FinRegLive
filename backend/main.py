@@ -16,6 +16,7 @@
 
 from fastapi import FastAPI
 
+from backend.api.analytics import router as analytics_router
 from backend.api.diagnostics import router as diagnostics_router
 from backend.api.documents import router as documents_router
 from backend.api.feedback import router as feedback_router
@@ -50,3 +51,4 @@ app.include_router(feedback_router)
 app.include_router(diagnostics_router)
 app.include_router(documents_router)
 app.include_router(ingestion_router)
+app.include_router(analytics_router)

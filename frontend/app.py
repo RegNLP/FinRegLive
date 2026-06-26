@@ -330,6 +330,41 @@ def render_diagnostics_page() -> None:
     st.json(diagnostics)
 
 
+def render_analytics_page() -> None:
+    st.header("Analytics")
+
+    try:
+        analytics = api_get("/analytics/corpus")
+    except requests.RequestException as exc:
+        st.error(f"Analytics failed: {exc}")
+        return
+
+    total_a, total_b = st.columns(2)
+    total_a.metric("Documents", analytics["total_documents"])
+    total_b.metric("Chunks", analytics["total_chunks"])
+
+    st.subheader("Length Stats")
+    document_stats = analytics["document_length_stats"]
+    chunk_stats = analytics["chunk_length_stats"]
+
+    doc_a, doc_b, doc_c = st.columns(3)
+    doc_a.metric("Document min words", document_stats["min_words"])
+    doc_b.metric("Document avg words", document_stats["avg_words"])
+    doc_c.metric("Document max words", document_stats["max_words"])
+
+    chunk_a, chunk_b, chunk_c = st.columns(3)
+    chunk_a.metric("Chunk min words", chunk_stats["min_words"])
+    chunk_b.metric("Chunk avg words", chunk_stats["avg_words"])
+    chunk_c.metric("Chunk max words", chunk_stats["max_words"])
+
+    st.subheader("Source Coverage")
+    st.dataframe(
+        analytics["sources"],
+        hide_index=True,
+        use_container_width=True,
+    )
+
+
 def main() -> None:
     st.set_page_config(
         page_title="FinReg Live Intelligence",
@@ -340,13 +375,15 @@ def main() -> None:
     st.title("FinReg Live Intelligence")
     show_api_status()
 
-    ask_tab, recent_updates_tab, diagnostics_tab = st.tabs(
-        ["Ask", "Recent Updates", "Diagnostics"]
+    ask_tab, recent_updates_tab, analytics_tab, diagnostics_tab = st.tabs(
+        ["Ask", "Recent Updates", "Analytics", "Diagnostics"]
     )
     with ask_tab:
         render_ask_page()
     with recent_updates_tab:
         render_recent_updates_page()
+    with analytics_tab:
+        render_analytics_page()
     with diagnostics_tab:
         render_diagnostics_page()
 
