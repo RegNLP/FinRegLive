@@ -207,6 +207,7 @@ Completed:
 - Phase 7: BM25, vector, and hybrid retrieval
 - Phase 8: local source-grounded answer generation
 - Phase 8b: optional OpenAI source-grounded answer generation
+- Phase 9A: FastAPI `/query` endpoint for local and OpenAI answer generation
 
 Current working flow:
 
@@ -224,6 +225,7 @@ SEC RSS / FCA HTML
   -> reusable retrieval functions
   -> source-grounded answer with citations
   -> optional OpenAI answer generation
+  -> FastAPI /query endpoint
 ```
 
 Not built yet:
@@ -274,7 +276,7 @@ Tools:
 
 Checkpoint:
 
-- Running `uvicorn backend.main:app --reload` starts the API
+- Running `.venv/bin/python -m uvicorn backend.main:app --reload` starts the API
 - Visiting `/health` returns a simple success response
 
 ### Phase 2: Configuration and Environment

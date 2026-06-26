@@ -16,6 +16,7 @@
 
 from fastapi import FastAPI
 
+from backend.api.query import router as query_router
 from backend.config import get_settings
 from backend.database.db import init_db
 
@@ -38,3 +39,6 @@ def config() -> dict[str, str]:
 def db_check() -> dict[str, str]:
     init_db()
     return {"database": "ok"}
+
+
+app.include_router(query_router)

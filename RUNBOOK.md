@@ -40,7 +40,7 @@ python -m pip install -r requirements.txt
 ### Start Backend
 
 ```bash
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
 ```
 
 What this means:
@@ -132,7 +132,7 @@ A real `.env` file should stay local and should not be committed.
 Start the backend first:
 
 ```bash
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
 ```
 
 Then run:
@@ -156,7 +156,7 @@ The app uses `configs/local.yaml` by default. Later, another config file can be 
 Example:
 
 ```bash
-FINREG_CONFIG_PATH=configs/local.yaml uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+FINREG_CONFIG_PATH=configs/local.yaml .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
 ```
 
 ## Step 3: Data Model and Storage
@@ -188,7 +188,7 @@ python -m pip install -r requirements.txt
 Start the backend first:
 
 ```bash
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
 ```
 
 Then run:
@@ -796,6 +796,48 @@ python -m backend.generation.answer "What did the SEC and CFTC publish about der
 The retrieval still happens locally through OpenSearch. OpenAI only receives the question and retrieved evidence.
 The app prints sources and limitations separately, so the LLM should return only the answer text.
 
+## Step 9A: Query API Endpoint
+
+Step 9A exposes the RAG flow through FastAPI.
+
+Files added or updated:
+
+```text
+backend/api/__init__.py
+backend/api/query.py
+backend/main.py
+```
+
+Start the backend:
+
+```bash
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+```
+
+Call `/query` with local fallback generation:
+
+```bash
+curl -X POST http://127.0.0.1:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What did the SEC and CFTC publish about derivatives?",
+    "top_k": 2,
+    "use_llm": false
+  }'
+```
+
+Call `/query` with OpenAI generation:
+
+```bash
+curl -X POST http://127.0.0.1:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What did the SEC and CFTC publish about derivatives?",
+    "top_k": 2,
+    "use_llm": true
+  }'
+```
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.
@@ -803,7 +845,7 @@ Run these from the project root after activating `.venv`.
 Start backend:
 
 ```bash
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
 ```
 
 In another terminal:
