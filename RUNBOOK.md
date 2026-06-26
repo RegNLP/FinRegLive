@@ -1168,6 +1168,52 @@ If OpenAI mode is requested but `OPENAI_API_KEY` is missing, `/query` returns:
 }
 ```
 
+## Step 11B: Tests with Pytest
+
+Step 11B adds automated tests.
+
+Why this exists:
+
+- tests protect important behavior while the project grows
+- tests catch accidental changes in chunking and deduplication
+- tests verify API validation and friendly error responses
+- mocked API tests avoid real OpenSearch and OpenAI calls
+
+Files added or updated:
+
+```text
+tests/__init__.py
+tests/test_api.py
+tests/test_chunker.py
+tests/test_deduplication.py
+readline.py
+requirements.txt
+```
+
+Install updated dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Run tests:
+
+```bash
+python -m pytest -q
+```
+
+Expected result:
+
+```text
+12 passed
+```
+
+Note:
+
+- `readline.py` is a local compatibility stub.
+- It exists because this macOS/conda Python environment crashes on native `import readline` during pytest startup.
+- The application does not depend on readline.
+
 ## Checks So Far
 
 Run these from the project root after activating `.venv`.

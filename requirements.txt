@@ -4,6 +4,7 @@ feedparser
 openai
 opensearch-py
 PyYAML
+pytest<9
 requests
 sentence-transformers
 sqlmodel

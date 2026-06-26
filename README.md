@@ -213,6 +213,7 @@ Completed:
 - Phase 9D: diagnostics API for database and OpenSearch status
 - Phase 10: Streamlit frontend for query, sources, feedback, and diagnostics
 - Phase 11A: API validation and cleaner service error responses
+- Phase 11B: pytest coverage for chunking, deduplication, and API behavior
 
 Current working flow:
 
@@ -236,6 +237,7 @@ SEC RSS / FCA HTML
   -> diagnostics checks
   -> Streamlit user interface
   -> API quality checks
+  -> automated tests
 ```
 
 Not built yet:
