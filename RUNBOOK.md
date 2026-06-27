@@ -1524,6 +1524,12 @@ curl -X POST http://127.0.0.1:8000/retrieval/diagnostics \
   -d '{"question":"What recent FCA updates mention listing rules or investment funds?","top_k":5}'
 ```
 
+Classify a question:
+
+```bash
+python -m backend.routing.classifier "Does the firm need approval if its controller structure changes?"
+```
+
 Run a small basic evaluation smoke test:
 
 ```bash
