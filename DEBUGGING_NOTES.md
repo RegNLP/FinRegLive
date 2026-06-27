@@ -331,7 +331,7 @@ Completed:
 - Phase 7: BM25, vector, and hybrid retrieval
 - Phase 8: local source-grounded answer generation
 - Phase 8b: optional OpenAI source-grounded answer generation
-- Phase 9A: FastAPI `/query` endpoint for local and OpenAI answer generation
+- Phase 9A: initial FastAPI `/query` endpoint
 - Phase 9B: query logging for `/query` requests
 - Phase 9C: feedback API connected to saved query IDs
 - Phase 9D: diagnostics API for database and OpenSearch status
@@ -354,6 +354,7 @@ Completed:
 - Phase 18B: route policy mapping
 - Phase 18C: evidence diagnostics module
 - Phase 18D: route-aware local answer pipeline
+- Phase 18D API: `/query` uses route-aware architecture
 
 Current working flow:
 
@@ -371,7 +372,6 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> BM25/vector search checks
   -> reusable retrieval functions
   -> source-grounded answer with citations
-  -> optional OpenAI answer generation
   -> FastAPI /query endpoint
   -> SQLite query log
   -> feedback storage
@@ -388,8 +388,8 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> query classification
   -> route policy selection
   -> evidence diagnostics
-  -> route-aware local answer pipeline
-  -> optional reranking before answer generation
+  -> route-aware `/query` pipeline
+  -> route-controlled reranking before answer generation
   -> confidence and abstention gate
   -> basic local evaluation
   -> Docker Compose local stack
@@ -397,7 +397,6 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
 
 Not built yet:
 
-- live `/query` integration for route-aware generation
 - verification and fallback
 - evaluation layer 2: LLM-as-a-judge
 - evaluation layer 3: RAGAS experiment
@@ -1004,7 +1003,7 @@ Deliverables:
 
 - reranking module
 - reranker applied after hybrid retrieval
-- optional `/query` setting for reranking
+- reranker available to route policy
 - Streamlit toggle for reranking
 - tests comparing reranked and non-reranked behavior
 
@@ -1212,8 +1211,8 @@ python -m backend.pipeline.route_aware_answer "What is an Authorised Person?"
 Important design note:
 
 - Phase 18D creates the route-aware answer pipeline.
-- The live `/query` endpoint is not switched to this pipeline yet.
-- API wiring should be done after this pipeline is validated independently.
+- The live `/query` endpoint now uses this route-aware pipeline.
+- Clients send only the question; route policy controls top-k, reranking, and diagnostics.
 
 Checkpoint:
 

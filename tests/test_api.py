@@ -21,11 +21,14 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 
+from backend.evidence.diagnostics import diagnose_evidence
 from backend.database.models import Chunk, Document
-from backend.generation.llm_client import MissingOpenAIAPIKeyError
 from backend.generation.models import AnswerSource, GroundedAnswer
 from backend.main import app
+from backend.pipeline.route_aware_answer import RouteAwareAnswer
 from backend.retrieval.models import RetrievalResult
+from backend.routing.classifier import QueryClass, QueryClassification, RouteHint
+from backend.routing.policy import RouteName, ROUTE_POLICIES
 
 
 client = TestClient(app)
@@ -47,6 +50,40 @@ def sample_answer() -> GroundedAnswer:
     )
 
 
+def sample_route_aware_answer() -> RouteAwareAnswer:
+    evidence = [
+        RetrievalResult(
+            rank=1,
+            score=1.0,
+            retrieval_method="hybrid",
+            chunk_id="1",
+            document_id=7,
+            chunk_index=0,
+            title="SEC and CFTC update",
+            source_name="SEC",
+            source_url="https://example.com/sec-cftc",
+            chunk_text="They published a request for public comment.",
+        )
+    ]
+    route_policy = ROUTE_POLICIES[RouteName.MEDIUM]
+    return RouteAwareAnswer(
+        answer=sample_answer(),
+        classification=QueryClassification(
+            query_class=QueryClass.GENERAL_QUESTION,
+            confidence=0.35,
+            matched_rules=("fallback:no_specific_rule_matched",),
+            route_hint=RouteHint.MEDIUM,
+        ),
+        route_policy=route_policy,
+        evidence_diagnostics=diagnose_evidence(
+            "What did regulators publish?",
+            evidence,
+            route_policy,
+        ),
+        evidence=evidence,
+    )
+
+
 def test_health_endpoint() -> None:
     response = client.get("/health")
 
@@ -57,7 +94,7 @@ def test_health_endpoint() -> None:
 def test_query_rejects_blank_question() -> None:
     response = client.post(
         "/query",
-        json={"question": "   ", "top_k": 2, "use_llm": False},
+        json={"question": "   "},
     )
 
     assert response.status_code == 422
@@ -66,82 +103,64 @@ def test_query_rejects_blank_question() -> None:
 def test_query_returns_answer_and_query_id() -> None:
     with (
         patch("backend.api.query.init_db"),
-        patch("backend.api.query.answer_question", return_value=sample_answer()),
+        patch(
+            "backend.api.query.answer_question_route_aware",
+            return_value=sample_route_aware_answer(),
+        ),
         patch("backend.api.query.create_query_log", return_value=SimpleNamespace(id=42)),
     ):
         response = client.post(
             "/query",
-            json={"question": "What did regulators publish?", "top_k": 2, "use_llm": False},
+            json={"question": "What did regulators publish?"},
         )
 
     payload = response.json()
     assert response.status_code == 200
     assert payload["query_id"] == 42
     assert payload["sources"][0]["chunk_id"] == "1"
+    assert payload["classification"]["query_class"] == "general_question"
+    assert payload["route_policy"]["route_name"] == "medium"
+    assert payload["evidence_diagnostics"]["retrieved_count"] == 1
 
 
-def test_query_can_use_reranking() -> None:
+def test_query_logs_route_policy_settings() -> None:
     with (
         patch("backend.api.query.init_db"),
-        patch("backend.api.query.answer_question", return_value=sample_answer()) as answer_question,
+        patch(
+            "backend.api.query.answer_question_route_aware",
+            return_value=sample_route_aware_answer(),
+        ) as answer_question_route_aware,
         patch("backend.api.query.create_query_log", return_value=SimpleNamespace(id=42)) as create_query_log,
     ):
         response = client.post(
             "/query",
-            json={
-                "question": "What did regulators publish?",
-                "top_k": 2,
-                "use_llm": False,
-                "use_reranking": True,
-            },
+            json={"question": "What did regulators publish?"},
         )
 
     assert response.status_code == 200
-    answer_question.assert_called_once_with(
-        "What did regulators publish?",
-        top_k=2,
-        use_reranking=True,
-    )
-    assert create_query_log.call_args.kwargs["retrieval_method"] == "hybrid_reranked"
+    answer_question_route_aware.assert_called_once_with("What did regulators publish?")
+    assert create_query_log.call_args.kwargs["retrieval_method"] == "medium"
+    assert create_query_log.call_args.kwargs["answer_mode"] == "medium_model"
+    assert create_query_log.call_args.kwargs["top_k"] == 8
 
 
 def test_query_returns_503_when_search_is_unavailable() -> None:
     with (
         patch("backend.api.query.init_db"),
         patch(
-            "backend.api.query.answer_question",
+            "backend.api.query.answer_question_route_aware",
             side_effect=OpenSearchConnectionError("N/A", "unavailable", Exception("down")),
         ),
     ):
         response = client.post(
             "/query",
-            json={"question": "What changed?", "top_k": 2, "use_llm": False},
+            json={"question": "What changed?"},
         )
 
     assert response.status_code == 503
     assert response.json() == {
         "detail": "Search service is unavailable or the chunk index is not ready."
     }
-
-
-def test_query_returns_503_when_openai_key_is_missing() -> None:
-    with (
-        patch("backend.api.query.init_db"),
-        patch(
-            "backend.api.query.answer_question_with_llm",
-            side_effect=MissingOpenAIAPIKeyError("missing"),
-        ),
-    ):
-        response = client.post(
-            "/query",
-            json={"question": "What changed?", "top_k": 2, "use_llm": True},
-        )
-
-    assert response.status_code == 503
-    assert response.json() == {
-        "detail": "OpenAI answer generation is not configured. Check OPENAI_API_KEY."
-    }
-
 
 def test_feedback_rejects_unknown_label() -> None:
     response = client.post(

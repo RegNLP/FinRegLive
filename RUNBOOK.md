@@ -815,27 +815,13 @@ Start the backend:
 .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude '.venv/*'
 ```
 
-Call `/query` with local fallback generation:
+Call `/query` with route-aware generation:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/query \
   -H "Content-Type: application/json" \
   -d '{
-    "question": "What did the SEC and CFTC publish about derivatives?",
-    "top_k": 2,
-    "use_llm": false
-  }'
-```
-
-Call `/query` with OpenAI generation:
-
-```bash
-curl -X POST http://127.0.0.1:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "What did the SEC and CFTC publish about derivatives?",
-    "top_k": 2,
-    "use_llm": true
+    "question": "What did the SEC and CFTC publish about derivatives?"
   }'
 ```
 
@@ -847,6 +833,9 @@ question
 answer
 sources
 limitations
+classification
+route_policy
+evidence_diagnostics
 ```
 
 `query_id` is useful for later feedback. It lets the app connect feedback to the exact question and answer.
@@ -922,9 +911,7 @@ First, create a query and note the returned `query_id`:
 curl -X POST http://127.0.0.1:8000/query \
   -H "Content-Type: application/json" \
   -d '{
-    "question": "What did the SEC and CFTC publish about derivatives?",
-    "top_k": 2,
-    "use_llm": false
+    "question": "What did the SEC and CFTC publish about derivatives?"
   }'
 ```
 
@@ -1103,13 +1090,11 @@ Why this exists:
 - blank questions should not run retrieval
 - feedback labels should use known values only
 - OpenSearch failures should return a clear service error
-- missing OpenAI configuration should return a clear service error
 
 Validation added:
 
 ```text
 question: 3 to 1000 non-space characters
-top_k: 1 to 10
 useful_label: useful, not_useful, unsure
 correctness_label: correct, incorrect, unsure
 evidence_label: supported, weak, missing, unsure
@@ -1122,9 +1107,7 @@ Check blank question validation:
 curl -i -X POST http://127.0.0.1:8000/query \
   -H "Content-Type: application/json" \
   -d '{
-    "question": "   ",
-    "top_k": 2,
-    "use_llm": false
+    "question": "   "
   }'
 ```
 
@@ -1158,14 +1141,6 @@ If OpenSearch is unavailable, `/query` returns:
 ```json
 {
   "detail": "Search service is unavailable or the chunk index is not ready."
-}
-```
-
-If OpenAI mode is requested but `OPENAI_API_KEY` is missing, `/query` returns:
-
-```json
-{
-  "detail": "OpenAI answer generation is not configured. Check OPENAI_API_KEY."
 }
 ```
 
@@ -1500,20 +1475,20 @@ docker compose --env-file .env -f infra/docker-compose.yml exec -T backend \
   python -m backend.ingestion.recent --days 7 --source boe_prudential --limit 50 --recreate-index
 ```
 
-Test a Docker API query:
+Test a Docker route-aware API query:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/query \
   -H 'Content-Type: application/json' \
-  -d '{"question":"What did the SEC and CFTC publish about derivatives?","top_k":2,"use_llm":false}'
+  -d '{"question":"What did the SEC and CFTC publish about derivatives?"}'
 ```
 
-Test a Docker API query with reranking:
+Test a Docker route-aware API query for a compliance-style question:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/query \
   -H 'Content-Type: application/json' \
-  -d '{"question":"What recent FCA updates mention listing rules or investment funds?","top_k":3,"use_llm":false,"use_reranking":true}'
+  -d '{"question":"Does the firm need approval if its controller structure changes?"}'
 ```
 
 Compare BM25, vector, and hybrid retrieval:

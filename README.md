@@ -140,7 +140,7 @@ Ask a local source-grounded question:
 ```bash
 curl -X POST http://127.0.0.1:8000/query \
   -H 'Content-Type: application/json' \
-  -d '{"question":"What recent FCA updates mention listing rules or investment funds?","top_k":3,"use_llm":false,"use_reranking":true}'
+  -d '{"question":"What recent FCA updates mention listing rules or investment funds?"}'
 ```
 
 Compare retrieval methods:
@@ -165,7 +165,7 @@ More operational commands are in [RUNBOOK.md](RUNBOOK.md).
 | --- | --- |
 | `GET /health` | Backend health check |
 | `GET /diagnostics` | Database and OpenSearch diagnostics |
-| `POST /query` | Source-grounded question answering |
+| `POST /query` | Route-aware source-grounded question answering |
 | `POST /feedback` | Store user feedback for a query |
 | `GET /documents` | List stored documents |
 | `GET /documents/{document_id}` | Inspect one document and its chunks |

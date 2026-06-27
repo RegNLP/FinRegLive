@@ -266,13 +266,6 @@ def render_ask_page() -> None:
             value="What did the SEC and CFTC publish about derivatives?",
             height=120,
         )
-        col_a, col_b, col_c = st.columns([1, 1, 1])
-        with col_a:
-            top_k = st.slider("Sources", min_value=1, max_value=10, value=2)
-        with col_b:
-            use_llm = st.toggle("OpenAI answer", value=False)
-        with col_c:
-            use_reranking = st.toggle("Rerank evidence", value=False)
 
         submitted = st.form_submit_button("Run query")
 
@@ -282,9 +275,6 @@ def render_ask_page() -> None:
                 "/query",
                 {
                     "question": question,
-                    "top_k": top_k,
-                    "use_llm": use_llm,
-                    "use_reranking": use_reranking,
                 },
             )
         except requests.RequestException as exc:
@@ -301,6 +291,26 @@ def render_ask_page() -> None:
     meta_a, meta_b = st.columns([1, 1])
     meta_a.metric("Query ID", answer["query_id"])
     meta_b.metric("Sources", len(answer["sources"]))
+
+    route_policy = answer.get("route_policy", {})
+    classification = answer.get("classification", {})
+    diagnostics = answer.get("evidence_diagnostics", {})
+    if route_policy and classification and diagnostics:
+        st.subheader("Route")
+        route_a, route_b, route_c, route_d = st.columns(4)
+        route_a.metric("Class", classification["query_class"])
+        route_b.metric("Route", route_policy["route_name"])
+        route_c.metric("Top K", route_policy["top_k"])
+        route_d.metric("Evidence", diagnostics["evidence_strength"])
+
+        with st.expander("Route details", expanded=False):
+            st.json(
+                {
+                    "classification": classification,
+                    "route_policy": route_policy,
+                    "evidence_diagnostics": diagnostics,
+                }
+            )
 
     st.subheader("Sources")
     render_sources(answer["sources"])

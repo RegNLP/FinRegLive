@@ -9,12 +9,13 @@
 #   grounded answer.
 #
 # Input:
-#   POST /query with question, top_k, use_llm, and use_reranking.
+#   POST /query with question.
 #
 # Output:
-#   Grounded answer JSON with query_id, sources, and limitations.
+#   Grounded answer JSON with route metadata, query_id, sources, and limitations.
 
 from time import perf_counter
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
@@ -23,18 +24,17 @@ from pydantic import BaseModel, Field, field_validator
 
 from backend.database.crud import create_query_log
 from backend.database.db import init_db
-from backend.generation.answer import answer_question, answer_question_with_llm
-from backend.generation.llm_client import LLMGenerationError, MissingOpenAIAPIKeyError
-from backend.generation.models import GroundedAnswer
+from backend.generation.models import AnswerSource
+from backend.pipeline.route_aware_answer import (
+    answer_question_route_aware,
+    route_aware_answer_to_dict,
+)
 
 router = APIRouter(tags=["query"])
 
 
 class QueryRequest(BaseModel):
     question: str = Field(min_length=3, max_length=1000)
-    top_k: int = Field(default=5, ge=1, le=10)
-    use_llm: bool = False
-    use_reranking: bool = False
 
     @field_validator("question")
     @classmethod
@@ -45,51 +45,50 @@ class QueryRequest(BaseModel):
         return cleaned_value
 
 
-@router.post("/query", response_model=GroundedAnswer)
-def query(request: QueryRequest) -> GroundedAnswer:
+class QueryResponse(BaseModel):
+    query_id: int | None = None
+    question: str
+    answer: str
+    sources: list[AnswerSource]
+    limitations: list[str]
+    classification: dict[str, Any]
+    route_policy: dict[str, Any]
+    evidence_diagnostics: dict[str, Any]
+    evidence_chunk_ids: list[str]
+
+
+@router.post("/query", response_model=QueryResponse)
+def query(request: QueryRequest) -> QueryResponse:
     init_db()
 
     started_at = perf_counter()
-    answer_mode = "openai" if request.use_llm else "local"
-
     try:
-        if request.use_llm:
-            answer = answer_question_with_llm(
-                request.question,
-                top_k=request.top_k,
-                use_reranking=request.use_reranking,
-            )
-        else:
-            answer = answer_question(
-                request.question,
-                top_k=request.top_k,
-                use_reranking=request.use_reranking,
-            )
+        route_aware_result = answer_question_route_aware(request.question)
     except (OpenSearchConnectionError, NotFoundError, TransportError) as exc:
         raise HTTPException(
             status_code=503,
             detail="Search service is unavailable or the chunk index is not ready.",
         ) from exc
-    except MissingOpenAIAPIKeyError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="OpenAI answer generation is not configured. Check OPENAI_API_KEY.",
-        ) from exc
-    except LLMGenerationError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail="OpenAI answer generation failed. Try local mode or retry later.",
-        ) from exc
 
     latency_ms = int((perf_counter() - started_at) * 1000)
+    answer = route_aware_result.answer
     query_log = create_query_log(
         query_text=request.question,
-        retrieval_method="hybrid_reranked" if request.use_reranking else "hybrid",
-        answer_mode=answer_mode,
-        top_k=request.top_k,
+        retrieval_method=route_aware_result.route_policy.route_name.value,
+        answer_mode=route_aware_result.route_policy.generation_mode.value,
+        top_k=route_aware_result.route_policy.top_k,
         retrieved_chunk_ids=[source.chunk_id for source in answer.sources],
         source_count=len(answer.sources),
         latency_ms=latency_ms,
     )
 
-    return answer.model_copy(update={"query_id": query_log.id})
+    payload = route_aware_answer_to_dict(route_aware_result)
+    payload["answer"]["query_id"] = query_log.id
+
+    return QueryResponse(
+        **payload["answer"],
+        classification=payload["classification"],
+        route_policy=payload["route_policy"],
+        evidence_diagnostics=payload["evidence_diagnostics"],
+        evidence_chunk_ids=payload["evidence_chunk_ids"],
+    )
