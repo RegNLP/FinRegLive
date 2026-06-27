@@ -31,6 +31,116 @@ Public sources
   -> query logging and feedback
 ```
 
+## Target Route-Aware RAG Architecture
+
+The next architecture will make the RAG pipeline route-aware. Instead of using
+the same retrieval, context size, model, and verification strategy for every
+question, the system will classify the query and choose a cost-appropriate path.
+
+```text
+User question
+  -> query classifier
+  -> hybrid retrieval
+       -> BM25
+       -> dense embeddings
+       -> reciprocal rank fusion
+  -> reranker
+  -> evidence diagnostics
+       -> top-k relevance
+       -> score margin
+       -> source document spread
+       -> number of strong passages
+       -> cross-reference presence
+       -> risk markers
+  -> route decision
+       -> simple route
+       -> medium route
+       -> complex route
+       -> abstain route
+  -> generation
+  -> verification
+       -> citation check
+       -> faithfulness check
+       -> answerability check
+       -> optional judge
+  -> final answer or fallback
+```
+
+### Query Classes
+
+- `definition_lookup`: definitions, short lookups, abbreviations, and simple explanations
+- `obligation_question`: duties, requirements, notifications, reporting, and compliance obligations
+- `comparison_question`: compare two rules, regulators, sections, or obligations
+- `multi_hop_cross_reference`: questions that need multiple sections or linked evidence
+- `compliance_decision`: approval, exemption, threshold, deadline, penalty, or decision-style questions
+- `out_of_domain`: questions outside the indexed financial/regulatory corpus
+
+### Runtime Routes
+
+Route A: simple lookup
+
+- Use for definitions, short explanations, and single-point lookups
+- Retrieve with BM25 + dense retrieval + RRF
+- Use top-3 evidence chunks
+- Use a cheap/fast model or local answer mode
+- Require citations
+- Do not run an LLM judge
+
+Route B: medium reasoning
+
+- Use for obligations, summaries, and comparison questions
+- Retrieve with BM25 + dense retrieval + RRF
+- Apply reranking
+- Use top-8 evidence chunks
+- Use a medium model
+- Run citation check
+- Fallback if evidence is unsupported
+
+Route C: complex or high-risk regulatory reasoning
+
+- Use for compliance decisions, exceptions, thresholds, deadlines, approvals, penalties, or multi-hop legal/regulatory reasoning
+- Retrieve with BM25 + dense retrieval + RRF
+- Apply reranking
+- Expand cross-references where possible
+- Use top-12 to top-15 evidence chunks
+- Use a stronger reasoning model
+- Run citation verification
+- Run LLM-as-a-judge
+- Abstain if evidence is weak
+
+Route D: low-evidence or out-of-domain
+
+- Use when the question is outside the corpus or retrieval confidence is weak
+- Do not generate a normal answer
+- Return an abstention explaining that the answer is not supported by the indexed corpus
+
+### Fallback Policy
+
+The system should not retry forever. The first version will use `max_retry = 1`.
+
+```text
+generate answer
+  -> verification check
+       -> pass: return answer
+       -> fail: fallback once
+            -> increase top-k
+            -> use reranker
+            -> use stronger route/model
+            -> regenerate or abstain
+```
+
+Examples:
+
+- Simple route fails citation check -> fallback to medium route
+- Medium route judge says unsupported -> fallback to complex route
+- Complex route still fails -> abstain
+
+### Cost Controls
+
+- Model choice: simple uses cheaper generation, medium uses stronger generation, complex uses the strongest available reasoning mode
+- Context budget: simple top-3, medium top-8, complex top-12/top-15
+- Verification budget: simple citation check only, medium citation and answerability checks, complex citation check plus LLM-as-a-judge
+
 ## Main Features
 
 - Ingest public RSS, HTML, and PDF sources
@@ -265,6 +375,11 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
 
 Not built yet:
 
+- query classifier
+- route policy
+- evidence diagnostics
+- route-aware generation
+- verification and fallback
 - evaluation layer 2: LLM-as-a-judge
 - evaluation layer 3: RAGAS experiment
 - evaluation layer 4: DeepEval experiment
@@ -905,7 +1020,96 @@ Checkpoint:
 
 - We can run the same question set repeatedly and compare normal hybrid retrieval against reranked retrieval
 
-### Phase 17B: Evaluation Layer 2 - LLM-as-a-Judge
+### Phase 18A: Query Classifier
+
+Goal:
+
+- Classify each user question before retrieval/generation policy is selected
+
+Deliverables:
+
+- `backend/routing/`
+- rule-based query classifier
+- query classes: definition lookup, obligation, comparison, multi-hop, compliance decision, and out-of-domain
+- tests for representative question types
+
+Checkpoint:
+
+- The system can explain what type of question it received before answering
+
+### Phase 18B: Route Policy
+
+Goal:
+
+- Map query classes to route settings and cost controls
+
+Deliverables:
+
+- route definitions for simple, medium, complex, and abstain
+- per-route `top_k`, reranking, model mode, verification level, and judge policy
+- route metadata returned in API responses or diagnostics
+
+Checkpoint:
+
+- The same `/query` flow can choose different retrieval and verification settings by route
+
+### Phase 18C: Evidence Diagnostics
+
+Goal:
+
+- Measure retrieved evidence quality before answer generation
+
+Deliverables:
+
+- top-k relevance summary
+- score margin
+- source document spread
+- strong passage count
+- cross-reference indicators
+- risk markers for high-stakes regulatory questions
+- integration with the existing confidence gate
+
+Checkpoint:
+
+- The system can decide whether evidence is strong enough for simple, medium, or complex answering
+
+### Phase 18D: Route-Aware Generation
+
+Goal:
+
+- Generate answers using the route policy selected for the question
+
+Deliverables:
+
+- simple route using small context and low-cost generation
+- medium route using reranking and more evidence
+- complex route using larger context and stronger generation
+- abstain route that avoids unsupported generation
+
+Checkpoint:
+
+- Query behavior changes based on route instead of one fixed pipeline
+
+### Phase 18E: Verification and Fallback
+
+Goal:
+
+- Check generated answers before returning them and retry once when useful
+
+Deliverables:
+
+- citation check
+- answerability check
+- faithfulness check placeholder
+- `max_retry = 1` fallback policy
+- simple-to-medium and medium-to-complex fallback behavior
+- final abstention when verification still fails
+
+Checkpoint:
+
+- Unsupported answers are caught before final response, and retry cost is bounded
+
+### Phase 19A: Evaluation Layer 2 - LLM-as-a-Judge
 
 Goal:
 
@@ -922,7 +1126,7 @@ Checkpoint:
 
 - Each evaluated answer receives structured judge scores and short explanations
 
-### Phase 17C: Evaluation Layer 3 - RAGAS
+### Phase 19B: Evaluation Layer 3 - RAGAS
 
 Goal:
 
@@ -938,7 +1142,7 @@ Checkpoint:
 
 - RAGAS can run against the project question set and produce reusable metric output
 
-### Phase 17D: Evaluation Layer 4 - DeepEval
+### Phase 19C: Evaluation Layer 4 - DeepEval
 
 Goal:
 
@@ -954,7 +1158,7 @@ Checkpoint:
 
 - DeepEval can run repeatable RAG quality checks that could later be added to CI
 
-### Phase 18: Cloud-Ready Architecture
+### Phase 20: Cloud-Ready Architecture
 
 Goal:
 
@@ -975,7 +1179,7 @@ Checkpoint:
 
 - Each local component has a clear production equivalent
 
-### Phase 19: Final README and Presentation Rewrite
+### Phase 21: Final README and Presentation Rewrite
 
 Goal:
 
