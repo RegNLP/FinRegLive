@@ -92,6 +92,8 @@ COMPLIANCE_DECISION_RULES = RuleGroup(
     phrases=(
         "approval required",
         "can the firm",
+        "can the firm rely",
+        "can the firm proceed",
         "confidential",
         "definitive legal opinion",
         "does the firm need",
@@ -102,10 +104,13 @@ COMPLIANCE_DECISION_RULES = RuleGroup(
         "make a reasonable guess",
         "most likely",
         "need approval",
+        "need to notify",
         "next month",
+        "rely on an exemption",
         "required under these conditions",
         "sources are unrelated",
         "under these conditions",
+        "without notifying",
     ),
     keywords=(),
 )
@@ -119,7 +124,9 @@ COMPARISON_RULES = RuleGroup(
         "contrast",
         "difference between",
         "different ones",
+        "do these two",
         "how do they differ",
+        "how do these two",
         "similar regulatory topics",
         "similar or different",
         "versus",
@@ -129,6 +136,7 @@ COMPARISON_RULES = RuleGroup(
         "contrast",
         "difference",
         "differences",
+        "differ",
         "versus",
         "vs",
     ),
@@ -177,6 +185,7 @@ MULTI_HOP_RULES = RuleGroup(
         "cross-reference",
         "from multiple documents",
         "most active",
+        "read together",
         "recent trend",
         "section x and y",
         "themes appear",
@@ -187,6 +196,7 @@ MULTI_HOP_RULES = RuleGroup(
         "multi",
         "multiple",
         "sections",
+        "section",
         "sources",
         "themes",
         "trend",
@@ -237,11 +247,12 @@ def tokenize_for_rules(question: str) -> set[str]:
 
 def matched_rule_names(question: str, rule_group: RuleGroup) -> list[str]:
     normalized = normalize_question(question)
+    padded_normalized = f" {normalized} "
     tokens = tokenize_for_rules(question)
     matches: list[str] = []
 
     for phrase in rule_group.phrases:
-        if phrase in normalized:
+        if f" {phrase} " in padded_normalized:
             matches.append(f"phrase:{phrase}")
 
     for keyword in rule_group.keywords:

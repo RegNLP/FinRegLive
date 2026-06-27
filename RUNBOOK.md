@@ -1530,6 +1530,12 @@ Classify a question:
 python -m backend.routing.classifier "Does the firm need approval if its controller structure changes?"
 ```
 
+Run curated classifier examples:
+
+```bash
+python -m backend.routing.check_classifier_examples
+```
+
 Run a small basic evaluation smoke test:
 
 ```bash
