@@ -87,6 +87,7 @@ User question
 - `multi_hop_cross_reference`: questions that need multiple sections or linked evidence
 - `compliance_decision`: approval, exemption, threshold, deadline, penalty, or decision-style questions
 - `out_of_domain`: questions outside the indexed financial/regulatory corpus
+- `general_question`: low-confidence fallback for questions that do not match a specific rule
 
 ### Runtime Routes
 
@@ -1043,7 +1044,7 @@ Deliverables:
 
 - `backend/routing/`
 - rule-based query classifier
-- query classes: definition lookup, obligation, comparison, multi-hop, compliance decision, and out-of-domain
+- query classes: definition lookup, obligation, comparison, multi-hop, compliance decision, out-of-domain, and general question
 - tests for representative question types
 
 Checkpoint:

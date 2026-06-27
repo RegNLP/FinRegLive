@@ -63,6 +63,7 @@ flowchart TD
     classify --> qtype{Question class}
 
     qtype -->|definition_lookup| simple[Route A: simple lookup<br/>top-3, no judge]
+    qtype -->|general_question| medium
     qtype -->|obligation or comparison| medium[Route B: medium reasoning<br/>top-8, reranker]
     qtype -->|multi-hop or compliance decision| complex[Route C: complex reasoning<br/>top-12/15, judge]
     qtype -->|out_of_domain| abstain[Route D: abstain]

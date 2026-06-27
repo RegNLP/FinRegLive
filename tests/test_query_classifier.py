@@ -35,7 +35,7 @@ def test_classifies_obligation_question() -> None:
 
 
 def test_classifies_comparison_question() -> None:
-    result = classify_query("Compare the reporting duties under section X and Y.")
+    result = classify_query("Compare SEC and FCA updates.")
 
     assert result.query_class == QueryClass.COMPARISON_QUESTION
     assert result.route_hint == RouteHint.MEDIUM
@@ -67,7 +67,7 @@ def test_classifies_out_of_domain_question() -> None:
 
 
 def test_priority_keeps_high_risk_question_out_of_definition_route() -> None:
-    result = classify_query("What is the penalty if the firm fails to notify the FCA?")
+    result = classify_query("Is this compliant if the firm fails to notify the FCA?")
 
     assert result.query_class == QueryClass.COMPLIANCE_DECISION
     assert result.route_hint == RouteHint.COMPLEX
@@ -80,10 +80,32 @@ def test_priority_detects_comparison_before_obligation() -> None:
     assert result.route_hint == RouteHint.MEDIUM
 
 
-def test_fallback_uses_low_confidence_simple_lookup() -> None:
+def test_priority_detects_multi_hop_before_obligation() -> None:
+    result = classify_query(
+        "Across multiple documents, what reporting obligations appear most often?"
+    )
+
+    assert result.query_class == QueryClass.MULTI_HOP_CROSS_REFERENCE
+    assert result.route_hint == RouteHint.COMPLEX
+
+
+def test_broad_risk_terms_do_not_alone_create_compliance_decision() -> None:
+    result = classify_query("What is the approval threshold?")
+
+    assert result.query_class == QueryClass.GENERAL_QUESTION
+    assert result.route_hint == RouteHint.MEDIUM
+
+
+def test_fallback_uses_low_confidence_general_question() -> None:
     result = classify_query("Tell me about GEN.")
 
-    assert result.query_class == QueryClass.DEFINITION_LOOKUP
-    assert result.route_hint == RouteHint.SIMPLE
-    assert result.confidence == 0.40
-    assert result.matched_rules == ["fallback:no_specific_rule_matched"]
+    assert result.query_class == QueryClass.GENERAL_QUESTION
+    assert result.route_hint == RouteHint.MEDIUM
+    assert result.confidence == 0.35
+    assert result.matched_rules == ("fallback:no_specific_rule_matched",)
+
+
+def test_matched_rules_are_tuple_for_frozen_classification() -> None:
+    result = classify_query("Define Recognised Body.")
+
+    assert isinstance(result.matched_rules, tuple)

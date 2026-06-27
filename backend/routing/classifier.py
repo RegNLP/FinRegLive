@@ -27,6 +27,7 @@ class QueryClass(str, Enum):
     MULTI_HOP_CROSS_REFERENCE = "multi_hop_cross_reference"
     COMPLIANCE_DECISION = "compliance_decision"
     OUT_OF_DOMAIN = "out_of_domain"
+    GENERAL_QUESTION = "general_question"
 
 
 class RouteHint(str, Enum):
@@ -40,7 +41,7 @@ class RouteHint(str, Enum):
 class QueryClassification:
     query_class: QueryClass
     confidence: float
-    matched_rules: list[str]
+    matched_rules: tuple[str, ...]
     route_hint: RouteHint
 
 
@@ -94,7 +95,6 @@ COMPLIANCE_DECISION_RULES = RuleGroup(
         "confidential",
         "definitive legal opinion",
         "does the firm need",
-        "exemptions apply",
         "fully compliant",
         "is approval required",
         "is this compliant",
@@ -105,17 +105,9 @@ COMPLIANCE_DECISION_RULES = RuleGroup(
         "next month",
         "required under these conditions",
         "sources are unrelated",
+        "under these conditions",
     ),
-    keywords=(
-        "approval",
-        "approve",
-        "deadline",
-        "exemption",
-        "exemptions",
-        "fined",
-        "penalty",
-        "threshold",
-    ),
+    keywords=(),
 )
 
 COMPARISON_RULES = RuleGroup(
@@ -223,9 +215,9 @@ DEFINITION_RULES = RuleGroup(
 RULE_PRIORITY = (
     OUT_OF_DOMAIN_RULES,
     COMPLIANCE_DECISION_RULES,
+    MULTI_HOP_RULES,
     COMPARISON_RULES,
     OBLIGATION_RULES,
-    MULTI_HOP_RULES,
     DEFINITION_RULES,
 )
 
@@ -266,15 +258,15 @@ def classify_query(question: str) -> QueryClassification:
             return QueryClassification(
                 query_class=rule_group.query_class,
                 confidence=rule_group.confidence,
-                matched_rules=matches,
+                matched_rules=tuple(matches),
                 route_hint=rule_group.route_hint,
             )
 
     return QueryClassification(
-        query_class=QueryClass.DEFINITION_LOOKUP,
-        confidence=0.40,
-        matched_rules=["fallback:no_specific_rule_matched"],
-        route_hint=RouteHint.SIMPLE,
+        query_class=QueryClass.GENERAL_QUESTION,
+        confidence=0.35,
+        matched_rules=("fallback:no_specific_rule_matched",),
+        route_hint=RouteHint.MEDIUM,
     )
 
 
