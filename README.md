@@ -37,6 +37,8 @@ Detailed diagrams are available in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 The original step-by-step development notes are preserved in [DEBUGGING_NOTES.md](DEBUGGING_NOTES.md).
 
+General RAG learning notes are available in [LEARNING_MATERIALS.md](LEARNING_MATERIALS.md).
+
 ## Data Sources
 
 Current source coverage includes:
