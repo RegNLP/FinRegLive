@@ -1542,6 +1542,12 @@ Classify and route a question:
 python -m backend.routing.route_question "Does the firm need approval if its controller structure changes?"
 ```
 
+Run route-aware local answering:
+
+```bash
+python -m backend.pipeline.route_aware_answer "What is an Authorised Person?"
+```
+
 Run a small basic evaluation smoke test:
 
 ```bash

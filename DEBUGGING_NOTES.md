@@ -353,6 +353,7 @@ Completed:
 - Phase 18A: rule-based query classifier
 - Phase 18B: route policy mapping
 - Phase 18C: evidence diagnostics module
+- Phase 18D: route-aware local answer pipeline
 
 Current working flow:
 
@@ -387,6 +388,7 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> query classification
   -> route policy selection
   -> evidence diagnostics
+  -> route-aware local answer pipeline
   -> optional reranking before answer generation
   -> confidence and abstention gate
   -> basic local evaluation
@@ -395,7 +397,7 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
 
 Not built yet:
 
-- route-aware generation
+- live `/query` integration for route-aware generation
 - verification and fallback
 - evaluation layer 2: LLM-as-a-judge
 - evaluation layer 3: RAGAS experiment
@@ -1193,6 +1195,25 @@ Deliverables:
 - medium route using reranking and more evidence
 - complex route using larger context and stronger generation
 - abstain route that avoids unsupported generation
+- `backend/pipeline/route_aware_answer.py`
+- `RouteAwareAnswer` dataclass
+- route-aware retrieval using route policy `top_k`, `candidate_k`, and `use_reranking`
+- evidence diagnostics before generation
+- abstention when route is `abstain` or evidence strength is too weak
+- local source-grounded generation when evidence passes route checks
+- tests for simple, medium, complex, abstain, and metadata serialization
+
+Manual check:
+
+```bash
+python -m backend.pipeline.route_aware_answer "What is an Authorised Person?"
+```
+
+Important design note:
+
+- Phase 18D creates the route-aware answer pipeline.
+- The live `/query` endpoint is not switched to this pipeline yet.
+- API wiring should be done after this pipeline is validated independently.
 
 Checkpoint:
 
