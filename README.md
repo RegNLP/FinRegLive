@@ -31,6 +31,13 @@ Public sources
   -> query logging and feedback
 ```
 
+## Architecture Diagrams
+
+Detailed Mermaid diagrams are available in [ARCHITECTURE.md](ARCHITECTURE.md).
+They include the general architecture, ingestion pipeline, route-aware query
+flow, retrieval/reranking detail, evidence diagnostics, verification/fallback,
+evaluation layers, and local-to-cloud mapping.
+
 ## Target Route-Aware RAG Architecture
 
 The next architecture will make the RAG pipeline route-aware. Instead of using
