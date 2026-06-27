@@ -352,6 +352,7 @@ Completed:
 - Phase 17A fix: confidence and abstention gate
 - Phase 18A: rule-based query classifier
 - Phase 18B: route policy mapping
+- Phase 18C: evidence diagnostics module
 
 Current working flow:
 
@@ -385,6 +386,7 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> retrieval diagnostics
   -> query classification
   -> route policy selection
+  -> evidence diagnostics
   -> optional reranking before answer generation
   -> confidence and abstention gate
   -> basic local evaluation
@@ -393,7 +395,6 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
 
 Not built yet:
 
-- evidence diagnostics
 - route-aware generation
 - verification and fallback
 - evaluation layer 2: LLM-as-a-judge
@@ -1145,6 +1146,36 @@ Deliverables:
 - cross-reference indicators
 - risk markers for high-stakes regulatory questions
 - integration with the existing confidence gate
+- `backend/evidence/diagnostics.py`
+- `EvidenceDiagnostics` dataclass
+- evidence strength labels: `none`, `weak`, `moderate`, `strong`
+- tests for empty evidence, strong evidence, document spread, duplicate documents, cross-reference signals, risk markers, and serialization
+
+Current diagnostics fields:
+
+```text
+route_name
+retrieved_count
+top_score
+score_margin
+source_document_count
+duplicate_document_count
+source_name_count
+strong_passage_count
+max_token_overlap
+avg_token_overlap
+has_cross_reference_signal
+risk_markers
+evidence_strength
+reasons
+```
+
+Important design note:
+
+- Evidence diagnostics does not generate an answer.
+- Evidence diagnostics does not call an LLM.
+- It only measures the retrieved evidence so later route-aware generation,
+  verification, and fallback can make explainable decisions.
 
 Checkpoint:
 
