@@ -350,6 +350,8 @@ Completed:
 - Phase 16: local lexical reranking for hybrid retrieval candidates
 - Phase 17A: basic local evaluation runner
 - Phase 17A fix: confidence and abstention gate
+- Phase 18A: rule-based query classifier
+- Phase 18B: route policy mapping
 
 Current working flow:
 
@@ -381,6 +383,8 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
   -> corpus analytics
   -> ingestion run history
   -> retrieval diagnostics
+  -> query classification
+  -> route policy selection
   -> optional reranking before answer generation
   -> confidence and abstention gate
   -> basic local evaluation
@@ -389,8 +393,6 @@ SEC RSS / SEC EDGAR / FCA item pages / Bank of England RSS
 
 Not built yet:
 
-- query classifier
-- route policy
 - evidence diagnostics
 - route-aware generation
 - verification and fallback
@@ -1062,6 +1064,67 @@ Deliverables:
 - route definitions for simple, medium, complex, and abstain
 - per-route `top_k`, reranking, model mode, verification level, and judge policy
 - route metadata returned in API responses or diagnostics
+- `backend/routing/policy.py`
+- `backend/routing/route_question.py`
+- tests for query class to route policy mapping
+
+Current route mapping:
+
+```text
+definition_lookup          -> simple
+obligation_question        -> medium
+comparison_question        -> medium
+general_question           -> medium
+multi_hop_cross_reference  -> complex
+compliance_decision        -> complex
+out_of_domain              -> abstain
+```
+
+Current route settings:
+
+```text
+simple:
+  top_k: 3
+  candidate_k: 3
+  use_reranking: false
+  generation_mode: local
+  verification_level: citation
+  requires_judge: false
+  max_retry: 1
+
+medium:
+  top_k: 8
+  candidate_k: 20
+  use_reranking: true
+  generation_mode: medium_model
+  verification_level: citation_and_answerability
+  requires_judge: false
+  max_retry: 1
+
+complex:
+  top_k: 12
+  candidate_k: 30
+  use_reranking: true
+  generation_mode: strong_model
+  verification_level: strict_with_judge
+  requires_judge: true
+  max_retry: 1
+
+abstain:
+  top_k: 0
+  candidate_k: 0
+  use_reranking: false
+  generation_mode: none
+  verification_level: none
+  requires_judge: false
+  max_retry: 0
+```
+
+Manual check:
+
+```bash
+python -m backend.routing.route_question "Does the firm need approval if its controller structure changes?"
+```
 
 Checkpoint:
 
