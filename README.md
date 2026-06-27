@@ -12,6 +12,7 @@ The project is built as a local, cloud-ready prototype using FastAPI, Streamlit,
 - Supports BM25, vector, and hybrid retrieval
 - Applies optional reranking before answer generation
 - Classifies questions for route-aware RAG behavior
+- Maps query classes to simple, medium, complex, and abstain route policies
 - Generates source-grounded answers with citations
 - Abstains when evidence is weak, out-of-domain, speculative, or unsupported
 - Provides a Streamlit UI for querying, ingestion, diagnostics, analytics, and retrieval inspection
@@ -27,6 +28,7 @@ Public sources
   -> SQLite metadata storage
   -> OpenSearch indexing
   -> query classification
+  -> route policy selection
   -> hybrid retrieval
   -> optional reranking
   -> confidence and abstention gate
@@ -205,7 +207,6 @@ in-domain answerable questions: 0/8 abstained
 
 Next planned architecture work:
 
-- Route policy for simple, medium, complex, and abstain routes
 - Evidence diagnostics
 - Route-aware generation
 - Verification and fallback

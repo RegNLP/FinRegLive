@@ -1536,6 +1536,12 @@ Run curated classifier examples:
 python -m backend.routing.check_classifier_examples
 ```
 
+Classify and route a question:
+
+```bash
+python -m backend.routing.route_question "Does the firm need approval if its controller structure changes?"
+```
+
 Run a small basic evaluation smoke test:
 
 ```bash
